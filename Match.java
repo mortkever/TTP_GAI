@@ -22,4 +22,10 @@ public class Match {
     public void setTeamAway(Team teamAway) {
         this.teamAway = teamAway;
     }
+
+
+    @Override
+    public String toString() {
+        return team1.getName() + " vs " + team2.getName();
+    }
 }
