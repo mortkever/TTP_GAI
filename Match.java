@@ -26,6 +26,6 @@ public class Match {
 
     @Override
     public String toString() {
-        return team1.getName() + " vs " + team2.getName();
+        return teamHome.getName() + " vs " + teamAway.getName();
     }
 }

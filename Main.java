@@ -18,7 +18,7 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
 
-        // Voorbeeld code:
+        // ---------------------- Voorbeeld code --------------------------
         List<Team> teams = Arrays.asList(
                 new Team("Team 1"), new Team("Team 2"), new Team("Team 3"),
                 new Team("Team 4"), new Team("Team 5"), new Team("Team 6")
