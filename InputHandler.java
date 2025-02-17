@@ -1,12 +1,18 @@
+import javax.xml.stream.*;
 import java.io.*;
 import java.util.*;
 
 public class InputHandler {
-    private int[][] table;
+    private int[][] distances;
 
     // Constructor to read from file and initialize the table
     public InputHandler(String fileName) {
-        readDistanceMatrixFromTextFile(fileName);
+        String dataType = fileName.substring(fileName.length() - 3);
+        if(dataType.equals("txt")) {
+            readDistanceMatrixFromTextFile(fileName);
+        } else if (dataType.equals("xml")) {
+            readDistanceMatrixFromXMLFile(fileName);
+        }
     }
 
     private void readDistanceMatrixFromTextFile(String fileName) {
@@ -28,9 +34,9 @@ public class InputHandler {
             reader.close();
 
             // Convert List to 2D Array
-            table = new int[rows.size()][];
+            distances = new int[rows.size()][];
             for (int i = 0; i < rows.size(); i++) {
-                table[i] = rows.get(i);
+                distances[i] = rows.get(i);
             }
 
         } catch (IOException e) {
@@ -40,8 +46,50 @@ public class InputHandler {
         }
     }
 
+    private void readDistanceMatrixFromXMLFile(String fileName) {
+        try {
+            // Create StAX parser
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            FileInputStream fis = new FileInputStream(fileName);
+            XMLStreamReader reader = factory.createXMLStreamReader(fis);
+
+            // Store distances temporarily before determining array size
+            List<int[]> distanceList = new ArrayList<>();
+            int maxTeam = 0;
+
+            // Parse the XML file
+            while (reader.hasNext()) {
+                int event = reader.next();
+                if (event == XMLStreamReader.START_ELEMENT && reader.getLocalName().equals("distance")) {
+                    int dist = Integer.parseInt(reader.getAttributeValue(null, "dist"));
+                    int team1 = Integer.parseInt(reader.getAttributeValue(null, "team1"));
+                    int team2 = Integer.parseInt(reader.getAttributeValue(null, "team2"));
+
+                    // Track maximum team number to size the 2D array
+                    maxTeam = Math.max(maxTeam, Math.max(team1, team2));
+
+                    // Store distance in a list
+                    distanceList.add(new int[]{team1, team2, dist});
+                }
+            }
+            reader.close();
+            fis.close();
+
+            // Initialize the 2D array
+            distances = new int[maxTeam + 1][maxTeam + 1];
+
+            // Populate the 2D array
+            for (int[] entry : distanceList) {
+                distances[entry[0]][entry[1]] = entry[2];
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // Getter method to access the 2D array
-    public int[][] getDistanceMatrixFromTXT() {
-        return table;
+    public int[][] getDistanceMatrix() {
+        return distances;
     }
 }

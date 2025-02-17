@@ -8,11 +8,11 @@ public class Main {
 
         // ---------------------- Read input --------------------------
         // Path to input file
-        String fileName = "Data/t4.txt";
+        String fileName = "Data/NL4.xml";
 
         // Put the table in a 2D array
         InputHandler inputHandler = new InputHandler(fileName);
-        int[][] distanceMatrix = inputHandler.getDistanceMatrixFromTXT();
+        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
 
         // Print the 2D array
         printHandler.printDistanceMatrixContents(distanceMatrix);
