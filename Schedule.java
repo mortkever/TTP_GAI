@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -7,6 +8,10 @@ public class Schedule {
 
     public Schedule(Map<Integer, List<Match>> shedule) {
         this.schedule = shedule;
+    }
+
+    public Schedule() {
+        this.schedule = new HashMap<>();
     }
 
     public void addMatches(int round, List<Match> matches) {
