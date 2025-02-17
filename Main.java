@@ -14,5 +14,4 @@ public class Main {
         // Print the 2D array
         printHandler.printDistanceMatrixContents(distanceMatrix);
     }
-
 }

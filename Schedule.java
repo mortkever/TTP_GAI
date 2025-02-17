@@ -27,5 +27,7 @@ public class Schedule {
         }
     }
 
-
+    public Map<Integer, List<Match>> getSchedule() {
+        return schedule;
+    }
 }
