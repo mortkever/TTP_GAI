@@ -11,6 +11,8 @@ public class ScheduleValidator {
      * Voert alle validaties uit en toont de resultaten.
      */
     public void validate() {
+        boolean correctTotalGames = validateTotalGames();
+        boolean correctTotalRounds = validateTotalRounds();
         boolean uniqueMatches = validateUniqueMatchesPerRound();
         boolean noSelfMatches = validateNoSelfMatches();
         boolean noDuplicateMatches = validateNoDuplicateMatches();
@@ -25,7 +27,41 @@ public class ScheduleValidator {
     }
 
     /**
-     * 1. Controleert of een team maar één keer per ronde speelt.
+     * 1. Valideert of het totale aantal gespeelde wedstrijden correct is.
+     */
+    private boolean validateTotalGames() {
+        int totalGames = schedule.getSchedule().values().stream()
+                .mapToInt(List::size).sum();
+
+        int n = getTeamCount();
+        int expectedGames = n * (n - 1);
+
+        if (totalGames != expectedGames) {
+            System.out.println("⚠️ Ongeldig aantal wedstrijden: Gevonden " + totalGames + ", Verwacht " + expectedGames);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 2. Valideert of het totale aantal rondes correct is.
+     */
+    private boolean validateTotalRounds() {
+        int totalRounds = schedule.getSchedule().size();
+        int n = getTeamCount();
+        int expectedRounds = 2 * (n - 1);
+
+        if (totalRounds != expectedRounds) {
+            System.out.println("⚠️ Ongeldig aantal rondes: Gevonden " + totalRounds + ", Verwacht " + expectedRounds);
+            return false;
+        }
+        return true;
+    }
+
+
+
+    /**
+     * 3. Controleert of een team maar één keer per ronde speelt.
      */
     private boolean validateUniqueMatchesPerRound() {
         boolean isValid = true;
@@ -46,7 +82,7 @@ public class ScheduleValidator {
     }
 
     /**
-     * 2. Controleert of er geen wedstrijden zijn waar een team tegen zichzelf speelt.
+     * 4. Controleert of er geen wedstrijden zijn waar een team tegen zichzelf speelt.
      */
     private boolean validateNoSelfMatches() {
         boolean isValid = true;
@@ -64,7 +100,7 @@ public class ScheduleValidator {
     }
 
     /**
-     * 3. Controleert of er geen dubbele wedstrijden zijn tussen dezelfde teams.
+     * 5. Controleert of er geen dubbele wedstrijden zijn tussen dezelfde teams.
      */
     private boolean validateNoDuplicateMatches() {
         boolean isValid = true;
@@ -88,7 +124,7 @@ public class ScheduleValidator {
     }
 
     /**
-     * 4. Controleert of een team niet meer dan 3 keer achter elkaar thuis of uit speelt.
+     * 6. Controleert of een team niet meer dan 3 keer achter elkaar thuis of uit speelt.
      */
     private boolean validateHomeAwayStreaks() {
         boolean isValid = true;
@@ -129,7 +165,7 @@ public class ScheduleValidator {
     }
 
     /**
-     * 5. Controleert of alle teams exact 2 keer tegen elkaar spelen (1 keer thuis, 1 keer uit).
+     * 7. Controleert of alle teams exact 2 keer tegen elkaar spelen (1 keer thuis, 1 keer uit).
      */
     private boolean validateRoundRobin() {
         boolean isValid = true;
@@ -160,5 +196,15 @@ public class ScheduleValidator {
             }
         }
         return isValid;
+    }
+
+    /**
+     *  Hulpfuncties:
+     */
+    // Berekent het aantal teams op basis van de eerste ronde.
+    private int getTeamCount() {
+        if (schedule.getSchedule().isEmpty()) return 0;
+
+        return schedule.getSchedule().values().iterator().next().size() * 2; // Each match has 2 teams
     }
 }

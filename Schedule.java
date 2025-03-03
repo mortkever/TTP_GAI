@@ -35,63 +35,37 @@ public class Schedule {
         // Create a feasible schedule
         List<Team> teams = Arrays.asList(
                 new Team("Team 1"), new Team("Team 2"), new Team("Team 3"),
-                new Team("Team 4"), new Team("Team 5"), new Team("Team 6")
+                new Team("Team 4")
         );
 
         this.addMatches(1, Arrays.asList(
-                new Match(teams.get(0), teams.get(1)),
-                new Match(teams.get(2), teams.get(3)),
-                new Match(teams.get(4), teams.get(5))
+                new Match(teams.get(0), teams.get(2)),
+                new Match(teams.get(1), teams.get(3))
         ));
 
         this.addMatches(2, Arrays.asList(
-                new Match(teams.get(1), teams.get(2)),
-                new Match(teams.get(3), teams.get(4)),
-                new Match(teams.get(5), teams.get(0))
+                new Match(teams.get(0), teams.get(1)),
+                new Match(teams.get(2), teams.get(3))
         ));
 
         this.addMatches(3, Arrays.asList(
                 new Match(teams.get(0), teams.get(3)),
-                new Match(teams.get(2), teams.get(5)),
-                new Match(teams.get(4), teams.get(1))
+                new Match(teams.get(2), teams.get(1))
         ));
 
         this.addMatches(4, Arrays.asList(
-                new Match(teams.get(1), teams.get(5)),
-                new Match(teams.get(3), teams.get(2)),
-                new Match(teams.get(0), teams.get(4))
+                new Match(teams.get(2), teams.get(0)),
+                new Match(teams.get(3), teams.get(1))
         ));
 
         this.addMatches(5, Arrays.asList(
-                new Match(teams.get(5), teams.get(3)),
-                new Match(teams.get(4), teams.get(2)),
-                new Match(teams.get(1), teams.get(0))
+                new Match(teams.get(1), teams.get(0)),
+                new Match(teams.get(3), teams.get(2))
         ));
 
         this.addMatches(6, Arrays.asList(
-                new Match(teams.get(1), teams.get(4)),
-                new Match(teams.get(3), teams.get(0)),
-                new Match(teams.get(5), teams.get(2))
-        ));
-        this.addMatches(7, Arrays.asList(
-                new Match(teams.get(2), teams.get(1)),
-                new Match(teams.get(4), teams.get(3)),
-                new Match(teams.get(0), teams.get(5))
-        ));
-        this.addMatches(8, Arrays.asList(
-                new Match(teams.get(5), teams.get(1)),
-                new Match(teams.get(3), teams.get(2)),
-                new Match(teams.get(0), teams.get(4))
-        ));
-        this.addMatches(9, Arrays.asList(
-                new Match(teams.get(4), teams.get(5)),
-                new Match(teams.get(2), teams.get(0)),
-                new Match(teams.get(1), teams.get(3))
-        ));
-        this.addMatches(10, Arrays.asList(
-                new Match(teams.get(5), teams.get(4)),
-                new Match(teams.get(0), teams.get(2)),
-                new Match(teams.get(3), teams.get(1))
+                new Match(teams.get(1), teams.get(2)),
+                new Match(teams.get(3), teams.get(0))
         ));
     }
 
