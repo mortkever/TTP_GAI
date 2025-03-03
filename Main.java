@@ -25,5 +25,25 @@ public class Main {
         int nTeams = distanceMatrix.length;
         int timeSlots = 2 * nTeams;
 
+        // Print the 2D array
+        printHandler.printDistanceMatrixContents(distanceMatrix);
+
+
+        // ---------------------- Voorbeeld code --------------------------
+        Schedule schedule = new Schedule();
+        schedule.addFeasibleSchedule();
+
+        // Stap 4: Schema printen
+        schedule.printSchedule();
+
+        // Stap 5: Specifieke ronde ophalen
+        System.out.println("Wedstrijden in Ronde 2:");
+        for (Match match : schedule.getMatches(2)) {
+            System.out.println("  " + match);
+        }
+
+        // Stap 6: Validate solution
+        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule);
+        scheduleValidator.validate();
     }
 }
