@@ -14,9 +14,6 @@ import org.w3c.dom.Node;
 public class Main {
     public static void main(String[] args) throws GRBException {
 
-        GRBModel model = new GRBModel(new GRBEnv());
-        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-
         String fileName = "Data/NL4.xml";
 
         // Put the table in a 2D array
@@ -27,7 +24,6 @@ public class Main {
 
         // Print the 2D array
         printHandler.printDistanceMatrixContents(distanceMatrix);
-
 
         // ---------------------- Voorbeeld code --------------------------
         Schedule schedule = new Schedule();
@@ -45,5 +41,39 @@ public class Main {
         // Stap 6: Validate solution
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule);
         scheduleValidator.validate();
+
+        GRBModel model = new GRBModel(new GRBEnv());
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+
+        String fileName = "Data/NL4.xml";
+
+        // Put the table in a 2D array
+        InputHandler inputHandler = new InputHandler(fileName);
+        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
+        int nTeams = distanceMatrix.length;
+        int timeSlots = 2 * nTeams;
+
+        GRBModel model = new GRBModel(new GRBEnv());
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+
+        // -----------------------------------------------------------------------------------------------------------
+        // variables
+        // -----------------------------------------------------------------------------------------------------------
+        GRBLinExpr doelstelling = new GRBLinExpr();
+
+        GRBVar x[][][][] = new GRBVar[nTeams][timeSlots][nTeams][nTeams];
+        for (int t = 0; t < nTeams; t++) {
+            for (int s = 0; s < timeSlots; s++) {
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        x[t][s][i][j] = model.addVar(0, 1, 0, GRB.BINARY,
+                                "x( s " + s + ", i " + i + ", j " + j + ")");
+                        doelstelling.addTerm((double) distanceMatrix[i][j], x[t][s][i][j]);
+                    }
+                }
+            }
+        }
+
+        
     }
 }
