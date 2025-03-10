@@ -28,8 +28,7 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
-        Schedule schedule = new Schedule();
-        schedule.addFeasibleSchedule();
+        Schedule schedule = Schedule.loadScheduleFromXML("Data/OptimalSolutions/NL10_Optimal_Solution.xml");
 
         // Stap 4: Schema printen
         schedule.printSchedule();
