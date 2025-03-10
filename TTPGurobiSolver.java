@@ -2,8 +2,6 @@ import com.gurobi.gurobi.*;
 
 
 public class TTPGurobiSolver {
-
-
     public static void main(String args[]) throws GRBException {
 
 
@@ -93,6 +91,7 @@ public class TTPGurobiSolver {
 
         model.dispose();
         env.dispose();
+
 
 
 
