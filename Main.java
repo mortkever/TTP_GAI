@@ -19,6 +19,7 @@ public class Main {
 
         PrintHandler printHandler = new PrintHandler();
         // Print the 2D array
+        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
         Schedule schedule = new Schedule();
