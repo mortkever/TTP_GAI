@@ -61,15 +61,11 @@ public class Main {
                     GRBLinExpr flow = new GRBLinExpr();
 
                     for (int j = 0; j < nTeams; j++) {
-                        if (i != j) {
-                            flow.addTerm(1, x[t][s - 1][j][i]); // Kwam van team j naar i op s-1
-                        }
+                        flow.addTerm(1, x[t][s - 1][j][i]); // Kwam van team j naar i op s-1
                     }
 
                     for (int j = 0; j < nTeams; j++) {
-                        if (i != j) {
-                            flow.addTerm(-1, x[t][s][i][j]); // Vertrekt van i naar team j op s
-                        }
+                        flow.addTerm(-1, x[t][s][i][j]); // Vertrekt van i naar team j op s
                     }
                     model.addConstr(flow, GRB.EQUAL, 0, "flow_conservation(t=" + t + ",i=" + i + ",s=" + s + ")");
 
@@ -104,8 +100,8 @@ public class Main {
         }
 
         // Constraint 5 :
-        for (int s = 0; s < nTeams; s++) { // Voor elk team
-            for (int t = 0; t < timeSlots; t++) { // Voor elk tijdslot
+        for (int t = 0; t < nTeams; t++) { // Voor elk team
+            for (int s = 0; s < timeSlots; s++) { // Voor elk tijdslot
                 GRBLinExpr constraint = new GRBLinExpr();
 
                 // Eerste som: Flow die vertrekt van i naar j op tijdstip t
@@ -119,7 +115,7 @@ public class Main {
                 for (int t2 = 0; t2 < timeSlots; t2++) {
                     if (t2 != t) { // Vermijd dubbele toewijzing
                         for (int j = 0; j < nTeams; j++) {
-                            constraint.addTerm(1, x[t2][s][j][s]);
+                            constraint.addTerm(1, x[t2][s][j][t]);
                         }
                     }
                 }
