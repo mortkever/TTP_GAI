@@ -1,19 +1,25 @@
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
+import java.util.List;
+
 import com.gurobi.gurobi.*;
+
+import java.awt.*;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+import org.w3c.dom.Node;
 
 public class Main {
     public static void main(String[] args) throws GRBException {
 
         String fileName = "Data/Distances/NL4_distances.txt";
         int upperbound = 3;
-
         // Put the table in a 2D array
-        InputHandler inputHandler = new InputHandler(fileName);
-        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
-        int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * nTeams;
 
-        // Print the 2D array
         PrintHandler printHandler = new PrintHandler();
+        // Print the 2D array
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
@@ -31,6 +37,16 @@ public class Main {
         // Stap 6: Validate solution
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
         scheduleValidator.validate();
+
+
+        String fileName = "Data/NL4.xml";
+
+        // Put the table in a 2D array
+        InputHandler inputHandler = new InputHandler(fileName);
+        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
+        int nTeams = distanceMatrix.length;
+        int timeSlots = 2 * nTeams;
+        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         GRBModel model = new GRBModel(new GRBEnv());
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
@@ -53,29 +69,58 @@ public class Main {
             }
         }
 
-        // Contrait 2: FlowConversion
-        for (int t = 0; t < nTeams; t++) {
-            for (int i = 0; i < nTeams; nTeams++) {
-                for (int s = 1; s < timeSlots; timeSlots++) {
+        // Contrait 1: FlowConversion
+        for (int t = 0; t < nTeams; t++){
+            for(int i =0; i< nTeams; i++){
+                for(int s =1; s<timeSlots;s++){
 
                     GRBLinExpr flow = new GRBLinExpr();
 
                     for (int j = 0; j < nTeams; j++) {
-                        if (i != j) {
-                            flow.addTerm(1, x[t][s - 1][j][i]); // Kwam van team j naar i op s-1
-                        }
+                        flow.addTerm(1, x[t][s - 1][j][i]); // Kwam van team j naar i op s-1
                     }
 
                     for (int j = 0; j < nTeams; j++) {
-                        if (i != j) {
-                            flow.addTerm(-1, x[t][s][i][j]); // Vertrekt van i naar team j op s
-                        }
+                        flow.addTerm(-1, x[t][s][i][j]); // Vertrekt van i naar team j op s
                     }
                     model.addConstr(flow, GRB.EQUAL, 0, "flow_conservation(t=" + t + ",i=" + i + ",s=" + s + ")");
 
                 }
             }
         }
+
+        // Constraint 5 :
+
+        for (int t = 0; t < nTeams; t++) {  // For each team
+            for (int s = 0; s < timeSlots; s++) {  // For each timeslot
+                GRBLinExpr constraint = new GRBLinExpr();
+
+                // First summation: Flow from i to j at time t
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        constraint.addTerm(1, x[t][s][i][j]);
+                    }
+                }
+
+                // Second summation: Flow from other teams t' to same team s
+                for (int t2 = 0; t2 < nTeams; t2++) {  // FIX: Loop over teams, not time slots
+                    if (t2 != t) {  // Avoid duplicate assignment
+                        for (int j = 0; j < nTeams; j++) {
+                            constraint.addTerm(1, x[t2][s][j][t]);  // Ensure valid indexing
+                        }
+                    }
+                }
+
+                // Add constraint: Exactly one match per team s
+                model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
+            }
+        }
+
+        // Constraint 6
+
+
+
+
 
         // constraint 3
         for (int t = 0; t < nTeams; t++) {
@@ -103,32 +148,30 @@ public class Main {
             }
         }
 
-        // Constraint 5 :
-        for (int s = 0; s < nTeams; s++) { // Voor elk team
-            for (int t = 0; t < timeSlots; t++) { // Voor elk tijdslot
-                GRBLinExpr constraint = new GRBLinExpr();
+        model.optimize();
 
-                // Eerste som: Flow die vertrekt van i naar j op tijdstip t
-                for (int i = 0; i < nTeams; i++) {
-                    for (int j = 0; j < nTeams; j++) {
-                        constraint.addTerm(1, x[t][s][i][j]);
-                    }
-                }
+        if(model.get(GRB.IntAttr.Status) == GRB.OPTIMAL){
+            System.out.println("oplossing gevonden");
+            System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
 
-                // Tweede som: Flow vanuit andere tijdstippen t' naar hetzelfde team s
-                for (int t2 = 0; t2 < timeSlots; t2++) {
-                    if (t2 != t) { // Vermijd dubbele toewijzing
+            System.out.println("\nMatch Schedule:");
+            for (int t = 0; t < nTeams; t++) {
+                for (int s = 0; s < timeSlots; s++) {
+                    for (int i = 0; i < nTeams; i++) {
                         for (int j = 0; j < nTeams; j++) {
-                            constraint.addTerm(1, x[t2][s][j][s]);
+                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen
+                                System.out.println("Team " + t + " plays from " + i + " to " + j + " at time " + s);
+                            }
                         }
                     }
                 }
-
-                // Beperking toevoegen: Exact 1 flow per team s
-                model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
             }
+
+
+        }
+        else{
+            System.out.println("geen oplossing gevonden. ");
         }
 
-        model.optimize();
     }
 }

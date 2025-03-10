@@ -2,7 +2,10 @@
 //
 //
 //public class TTPGurobiSolver {
+//
+//
 //    public static void main(String args[]) throws GRBException {
+//
 //
 //        String fileName = "Data/NL4.xml";
 //        PrintHandler printHandler = new PrintHandler();
@@ -90,7 +93,6 @@
 //
 //        model.dispose();
 //        env.dispose();
-//
 //
 //
 //
