@@ -1,15 +1,4 @@
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
-import java.util.List;
-
 import com.gurobi.gurobi.*;
-
-import java.awt.*;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import org.w3c.dom.Node;
 
 public class Main {
     public static void main(String[] args) throws GRBException {
@@ -28,7 +17,7 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
-        Schedule schedule = Schedule.loadScheduleFromXML("Data/OptimalSolutions/NL10_Optimal_Solution.xml");
+        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution.xml");
 
         // Stap 4: Schema printen
         schedule.printSchedule();
@@ -64,7 +53,7 @@ public class Main {
             }
         }
 
-        // Contrait 1: FlowConversion
+        // Contrait 2: FlowConversion
         for (int t = 0; t < nTeams; t++) {
             for (int i = 0; i < nTeams; nTeams++) {
                 for (int s = 1; s < timeSlots; timeSlots++) {
@@ -85,33 +74,6 @@ public class Main {
                     model.addConstr(flow, GRB.EQUAL, 0, "flow_conservation(t=" + t + ",i=" + i + ",s=" + s + ")");
 
                 }
-            }
-        }
-
-        // Constraint 5 :
-
-        for (int s = 0; s < nTeams; s++) { // Voor elk team
-            for (int t = 0; t < timeSlots; t++) { // Voor elk tijdslot
-                GRBLinExpr constraint = new GRBLinExpr();
-
-                // Eerste som: Flow die vertrekt van i naar j op tijdstip t
-                for (int i = 0; i < nTeams; i++) {
-                    for (int j = 0; j < nTeams; j++) {
-                        constraint.addTerm(1, x[t][s][i][j]);
-                    }
-                }
-
-                // Tweede som: Flow vanuit andere tijdstippen t' naar hetzelfde team s
-                for (int t2 = 0; t2 < timeSlots; t2++) {
-                    if (t2 != t) { // Vermijd dubbele toewijzing
-                        for (int j = 0; j < nTeams; j++) {
-                            constraint.addTerm(1, x[t2][s][j][s]);
-                        }
-                    }
-                }
-
-                // Beperking toevoegen: Exact 1 flow per team s
-                model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
             }
         }
 
@@ -141,8 +103,32 @@ public class Main {
             }
         }
 
-        model.optimize();
+        // Constraint 5 :
+        for (int s = 0; s < nTeams; s++) { // Voor elk team
+            for (int t = 0; t < timeSlots; t++) { // Voor elk tijdslot
+                GRBLinExpr constraint = new GRBLinExpr();
 
-        
+                // Eerste som: Flow die vertrekt van i naar j op tijdstip t
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        constraint.addTerm(1, x[t][s][i][j]);
+                    }
+                }
+
+                // Tweede som: Flow vanuit andere tijdstippen t' naar hetzelfde team s
+                for (int t2 = 0; t2 < timeSlots; t2++) {
+                    if (t2 != t) { // Vermijd dubbele toewijzing
+                        for (int j = 0; j < nTeams; j++) {
+                            constraint.addTerm(1, x[t2][s][j][s]);
+                        }
+                    }
+                }
+
+                // Beperking toevoegen: Exact 1 flow per team s
+                model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
+            }
+        }
+
+        model.optimize();
     }
 }
