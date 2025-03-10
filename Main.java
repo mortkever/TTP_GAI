@@ -3,7 +3,7 @@ import com.gurobi.gurobi.*;
 public class Main {
     public static void main(String[] args) throws GRBException {
 
-        String fileName = "Data/NL4.xml";
+        String fileName = "Data/Distances/NL4_distances.txt";
         int upperbound = 3;
 
         // Put the table in a 2D array
@@ -17,7 +17,7 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
-        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution.xml");
+        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL4_Optimal_Solution.xml");
 
         // Stap 4: Schema printen
         schedule.printSchedule();
@@ -29,7 +29,7 @@ public class Main {
         }
 
         // Stap 6: Validate solution
-        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule);
+        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
         scheduleValidator.validate();
 
         GRBModel model = new GRBModel(new GRBEnv());
