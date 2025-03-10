@@ -19,11 +19,9 @@ public class Main {
 
         PrintHandler printHandler = new PrintHandler();
         // Print the 2D array
-        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
         Schedule schedule = new Schedule();
-        schedule.addFeasibleSchedule();
 
         // Stap 4: Schema printen
         schedule.printSchedule();
@@ -47,6 +45,7 @@ public class Main {
         int nTeams = distanceMatrix.length;
         int timeSlots = 2 * nTeams;
         printHandler.printDistanceMatrixContents(distanceMatrix);
+
 
         GRBModel model = new GRBModel(new GRBEnv());
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
