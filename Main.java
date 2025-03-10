@@ -14,16 +14,11 @@ import org.w3c.dom.Node;
 public class Main {
     public static void main(String[] args) throws GRBException {
 
-        String fileName = "Data/NL4.xml";
-
+        int upperbound = 3;
         // Put the table in a 2D array
-        InputHandler inputHandler = new InputHandler(fileName);
-        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
-        int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * nTeams;
 
+        PrintHandler printHandler = new PrintHandler();
         // Print the 2D array
-        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ---------------------- Voorbeeld code --------------------------
         Schedule schedule = new Schedule();
@@ -42,8 +37,6 @@ public class Main {
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule);
         scheduleValidator.validate();
 
-        GRBModel model = new GRBModel(new GRBEnv());
-        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
 
         String fileName = "Data/NL4.xml";
 
@@ -52,6 +45,7 @@ public class Main {
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
         int timeSlots = 2 * nTeams;
+        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         GRBModel model = new GRBModel(new GRBEnv());
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
@@ -76,8 +70,8 @@ public class Main {
 
         // Contrait 1: FlowConversion
         for (int t = 0; t < nTeams; t++){
-            for(int i =0; i< nTeams; nTeams++){
-                for(int s =0; s<timeSlots;timeSlots++){
+            for(int i =0; i< nTeams; i++){
+                for(int s =1; s<timeSlots;s++){
 
                     GRBLinExpr flow = new GRBLinExpr();
 
@@ -100,27 +94,27 @@ public class Main {
 
         // Constraint 5 :
 
-        for (int s = 0; s < nTeams; s++) {  // Voor elk team
-            for (int t = 0; t < timeSlots; t++) {  // Voor elk tijdslot
+        for (int t = 0; t < nTeams; t++) {  // For each team
+            for (int s = 0; s < timeSlots; s++) {  // For each timeslot
                 GRBLinExpr constraint = new GRBLinExpr();
 
-                // Eerste som: Flow die vertrekt van i naar j op tijdstip t
+                // First summation: Flow from i to j at time t
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
                         constraint.addTerm(1, x[t][s][i][j]);
                     }
                 }
 
-                // Tweede som: Flow vanuit andere tijdstippen t' naar hetzelfde team s
-                for (int t2 = 0; t2 < timeSlots; t2++) {
-                    if (t2 != t) {  // Vermijd dubbele toewijzing
+                // Second summation: Flow from other teams t' to same team s
+                for (int t2 = 0; t2 < nTeams; t2++) {  // FIX: Loop over teams, not time slots
+                    if (t2 != t) {  // Avoid duplicate assignment
                         for (int j = 0; j < nTeams; j++) {
-                            constraint.addTerm(1, x[t2][s][j][s]);
+                            constraint.addTerm(1, x[t2][s][j][t]);  // Ensure valid indexing
                         }
                     }
                 }
 
-                // Beperking toevoegen: Exact 1 flow per team s
+                // Add constraint: Exactly one match per team s
                 model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
             }
         }
@@ -158,5 +152,29 @@ public class Main {
         }
 
         model.optimize();
+
+        if(model.get(GRB.IntAttr.Status) == GRB.OPTIMAL){
+            System.out.println("oplossing gevonden");
+            System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
+
+            System.out.println("\nMatch Schedule:");
+            for (int t = 0; t < nTeams; t++) {
+                for (int s = 0; s < timeSlots; s++) {
+                    for (int i = 0; i < nTeams; i++) {
+                        for (int j = 0; j < nTeams; j++) {
+                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen
+                                System.out.println("Team " + t + " plays from " + i + " to " + j + " at time " + s);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        }
+        else{
+            System.out.println("geen oplossing gevonden. ");
+        }
+
     }
 }
