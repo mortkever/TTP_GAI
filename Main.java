@@ -14,13 +14,22 @@ import org.w3c.dom.Node;
 public class Main {
     public static void main(String[] args) throws GRBException {
 
+        String fileName = "Data/Distances/NL4_distances.txt";
         int upperbound = 3;
 
         // Print the 2D array
 
         // ---------------------- Voorbeeld code --------------------------
-        Schedule schedule = new Schedule();
-        // schedule.addFeasibleSchedule();
+        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL4_Optimal_Solution.xml");
+
+        PrintHandler printHandler = new PrintHandler();
+
+        // Put the table in a 2D array
+        InputHandler inputHandler = new InputHandler(fileName);
+        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
+        int nTeams = distanceMatrix.length;
+        int timeSlots = 2 * nTeams;
+        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // Stap 4: Schema printen
         schedule.printSchedule();
@@ -32,18 +41,8 @@ public class Main {
         }
 
         // Stap 6: Validate solution
-        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule);
+        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
         scheduleValidator.validate();
-
-        String fileName = "Data/NL4.xml";
-        PrintHandler printHandler = new PrintHandler();
-
-        // Put the table in a 2D array
-        InputHandler inputHandler = new InputHandler(fileName);
-        int[][] distanceMatrix = inputHandler.getDistanceMatrix();
-        int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * nTeams;
-        printHandler.printDistanceMatrixContents(distanceMatrix);
 
         GRBModel model = new GRBModel(new GRBEnv());
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
@@ -95,7 +94,7 @@ public class Main {
                 // First summation: Flow from i to j at time t
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
-                        if(t!=i)
+                        if (t != i)
                             constraint.addTerm(1, x[t][s][i][j]);
                     }
                 }
@@ -114,7 +113,7 @@ public class Main {
             }
         }
 
-         // constraint 3
+        // constraint 3
         for (int t = 0; t < nTeams; t++) {
             for (int i = 0; i < nTeams; i++) {
                 if (i != t) {
@@ -127,7 +126,7 @@ public class Main {
                     model.addConstr(expr, '=', 1, "visitation_" + t + "_" + i);
                 }
             }
-        } 
+        }
 
         // constraint 4 consecutive home games
         for (int t = 0; t < nTeams; t++) {
@@ -136,9 +135,9 @@ public class Main {
                 for (int u = 0; u < upperbound; u++) {
                     expr.addTerm(1.0, x[t][s + u][t][t]);
                 }
-                model.addConstr(expr, GRB.LESS_EQUAL, upperbound-1, "breaks_" + t);
+                model.addConstr(expr, GRB.LESS_EQUAL, upperbound - 1, "breaks_" + t);
             }
-        } 
+        }
 
         model.optimize();
 
@@ -148,9 +147,9 @@ public class Main {
 
             System.out.println("\nMatch Schedule:");
             for (int t = 0; t < nTeams; t++) {
-            for (int s = 0; s < timeSlots; s++) {
-                for (int i = 0; i < nTeams; i++) {
-                    for (int j = 0; j < nTeams; j++) {
+                for (int s = 0; s < timeSlots; s++) {
+                    for (int i = 0; i < nTeams; i++) {
+                        for (int j = 0; j < nTeams; j++) {
                             if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen
                                 System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
                             }
