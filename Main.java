@@ -60,9 +60,9 @@ public class Main {
         }
 
         // Contrait 1: FlowConversion
-        for (int t = 0; t < nTeams; t++){
-            for(int i =0; i< nTeams; i++){
-                for(int s =1; s<timeSlots;s++){
+        for (int t = 0; t < nTeams; t++) {
+            for (int i = 0; i < nTeams; i++) {
+                for (int s = 1; s < timeSlots; s++) {
 
                     GRBLinExpr flow = new GRBLinExpr();
 
@@ -81,22 +81,23 @@ public class Main {
 
         // Constraint 5 :
 
-        for (int t = 0; t < nTeams; t++) {  // For each team
-            for (int s = 0; s < timeSlots; s++) {  // For each timeslot
+        for (int t = 0; t < nTeams; t++) { // For each team
+            for (int s = 0; s < timeSlots; s++) { // For each timeslot
                 GRBLinExpr constraint = new GRBLinExpr();
 
                 // First summation: Flow from i to j at time t
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
-                        constraint.addTerm(1, x[t][s][i][j]);
+                        if (t != i)
+                            constraint.addTerm(1, x[t][s][i][j]);
                     }
                 }
 
                 // Second summation: Flow from other teams t' to same team s
-                for (int t2 = 0; t2 < nTeams; t2++) {  // FIX: Loop over teams, not time slots
-                    if (t2 != t) {  // Avoid duplicate assignment
+                for (int t2 = 0; t2 < nTeams; t2++) { // FIX: Loop over teams, not time slots
+                    if (t2 != t) { // Avoid duplicate assignment
                         for (int j = 0; j < nTeams; j++) {
-                            constraint.addTerm(1, x[t2][s][j][t]);  // Ensure valid indexing
+                            constraint.addTerm(1, x[t2][s][t][j]); // Ensure valid indexing
                         }
                     }
                 }
@@ -105,12 +106,6 @@ public class Main {
                 model.addConstr(constraint, GRB.EQUAL, 1, "flow_constraint_s" + s + "_t" + t);
             }
         }
-
-        // Constraint 6
-
-
-
-
 
         // constraint 3
         for (int t = 0; t < nTeams; t++) {
@@ -129,18 +124,18 @@ public class Main {
 
         // constraint 4 consecutive home games
         for (int t = 0; t < nTeams; t++) {
-            for (int s = 0; s < timeSlots - upperbound; s++) {
+            for (int s = 1; s <= timeSlots - upperbound; s++) {
                 GRBLinExpr expr = new GRBLinExpr();
                 for (int u = 0; u < upperbound; u++) {
                     expr.addTerm(1.0, x[t][s + u][t][t]);
                 }
-                model.addConstr(expr, '<', upperbound, "breaks_" + t);
+                model.addConstr(expr, GRB.LESS_EQUAL, upperbound - 1, "breaks_" + t);
             }
         }
 
         model.optimize();
 
-        if(model.get(GRB.IntAttr.Status) == GRB.OPTIMAL){
+        if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
             System.out.println("oplossing gevonden");
             System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
 
@@ -150,16 +145,14 @@ public class Main {
                     for (int i = 0; i < nTeams; i++) {
                         for (int j = 0; j < nTeams; j++) {
                             if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen
-                                System.out.println("Team " + t + " plays from " + i + " to " + j + " at time " + s);
+                                System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
                             }
                         }
                     }
                 }
             }
 
-
-        }
-        else{
+        } else {
             System.out.println("geen oplossing gevonden. ");
         }
 
