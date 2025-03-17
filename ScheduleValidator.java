@@ -2,27 +2,32 @@ import java.util.*;
 
 public class ScheduleValidator {
     private final Schedule schedule;
+    private final int[][] distanceMatrix;
 
-    public ScheduleValidator(Schedule schedule) {
+    public ScheduleValidator(Schedule schedule, int[][] distanceMatrix) {
         this.schedule = schedule;
+        this.distanceMatrix = distanceMatrix;
     }
 
     /**
      * Voert alle validaties uit en toont de resultaten.
      */
     public void validate() {
-        boolean correctTotalGames = validateTotalGames();
-        boolean correctTotalRounds = validateTotalRounds();
-        boolean uniqueMatches = validateUniqueMatchesPerRound();
-        boolean noSelfMatches = validateNoSelfMatches();
-        boolean noDuplicateMatches = validateNoDuplicateMatches();
-        boolean noLongHomeAwayStreaks = validateHomeAwayStreaks();
-        boolean completeRoundRobin = validateRoundRobin();
+        List<Boolean> validationResults = List.of(
+                validateTotalGames(),
+                validateTotalRounds(),
+                validateUniqueMatchesPerRound(),
+                validateNoSelfMatches(),
+                validateNoDuplicateMatches(),
+                validateHomeAwayStreaks(),
+                validateRoundRobin(),
+                validateTotalDistance()
+        );
 
-        if (uniqueMatches && noSelfMatches && noDuplicateMatches && noLongHomeAwayStreaks && completeRoundRobin) {
-            System.out.println("✅ Het schema is volledig geldig.");
-        } else {
+        if (validationResults.contains(false)) {
             System.out.println("❌ Er zijn één of meerdere validatiefouten gevonden.");
+        } else {
+            System.out.println("✅ Het schema is volledig geldig.");
         }
     }
 
@@ -57,8 +62,6 @@ public class ScheduleValidator {
         }
         return true;
     }
-
-
 
     /**
      * 3. Controleert of een team maar één keer per ronde speelt.
@@ -196,6 +199,75 @@ public class ScheduleValidator {
             }
         }
         return isValid;
+    }
+
+    /**
+     * 8. Controleert de totaal afgelegde afstand van alle teams in het schema.
+     */
+    private boolean validateTotalDistance() {
+        int totalDistance = calculateTotalTravelDistance();
+        boolean isValid = schedule.getObjectiveValue() == totalDistance;
+        if(!isValid) {
+            System.out.println("⚠️ Totale travel distances komen niet overeen. " + schedule.getObjectiveValue() + " ≠ " + totalDistance);
+        }
+
+        return isValid;
+    }
+
+
+    /**
+     * Distance: Calculate the total travel distance for all teams in the schedule.
+     */
+    public int calculateTotalTravelDistance() {
+        Map<Team, Integer> travelDistances = new HashMap<>();
+        Map<Team, Integer> lastLocations = new HashMap<>(); // Store last known location
+
+        // Get all unique teams and set initial location
+        Set<Team> allTeams = schedule.getTeams();
+        for (Team team : allTeams) {
+            travelDistances.put(team, 0);
+            lastLocations.put(team, team.getID()); // Start at home location
+        }
+
+        // Iterate through rounds in order
+        for(List<Match> round : schedule.getSchedule().values()) {
+            for (Match match : round) {
+                // Get team information
+                Team homeTeam = match.getTeamHome();
+                Team awayTeam = match.getTeamAway();
+                int homeLocation = homeTeam.getID();
+                int homeLastLocation = lastLocations.get(homeTeam);
+                int awayLastLocation = lastLocations.get(awayTeam);
+
+                // Calculate the traveled distances for the 2 teams
+                int travelDistanceHomeTeam = distanceMatrix[homeLastLocation][homeLocation];
+                int travelDistanceAwayTeam = distanceMatrix[awayLastLocation][homeLocation];
+
+                // Update the travelDistances Map with the new distances
+                travelDistances.merge(homeTeam, travelDistanceHomeTeam, Integer::sum); // Add the travelDistance to the previous distance
+                travelDistances.merge(awayTeam, travelDistanceAwayTeam, Integer::sum);
+
+                // Update the lastLocation Map with the new locations
+                lastLocations.put(homeTeam, homeLocation);
+                lastLocations.put(awayTeam, homeLocation);
+            }
+        }
+
+        // Add return-to-home distance for all teams
+        for (Team team : allTeams) {
+            int lastLocation = lastLocations.get(team);
+            int homeLocation = team.getID();
+            if (lastLocation != homeLocation) {
+                int returnDistance = distanceMatrix[lastLocation][homeLocation];
+                travelDistances.merge(team, returnDistance, Integer::sum);
+            }
+        }
+
+        // Calculate total travel distance
+        int totalDistance = 0;
+        for(Team team: allTeams) totalDistance += travelDistances.get(team);
+
+        return totalDistance;
     }
 
     /**

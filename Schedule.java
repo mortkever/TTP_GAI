@@ -12,6 +12,7 @@ import java.util.*;
 
 public class Schedule {
     private Map<Integer, List<Match>> schedule;
+    private int objectiveValue;
 
     public Schedule(Map<Integer, List<Match>> shedule) {
         this.schedule = shedule;
@@ -29,6 +30,28 @@ public class Schedule {
         return schedule.getOrDefault(round, new ArrayList<>());
     }
 
+    public Set<Team> getTeams() {
+        // Get all teams from the schedule. They are all present in the first round (or any round)
+        Set<Team> teams = new HashSet<>();
+
+        // Get the first round
+        Integer firstKey = this.schedule.keySet().iterator().next();
+        List<Match> firstRound = this.schedule.get(firstKey);
+
+        // Add the teams
+        for (Match match : firstRound) {
+            teams.add(match.getTeamHome());
+            teams.add(match.getTeamAway());
+        }
+        return teams;
+    }
+    public int getObjectiveValue() {
+        return objectiveValue;
+    }
+    public void setObjectiveValue(int objectiveValue) {
+        this.objectiveValue = objectiveValue;
+    }
+
     public static Schedule loadScheduleFromXML(String filePath) {
         // Works with Schedules from "robinxval.ugent.be/RobinX"
         Schedule schedule = new Schedule();
@@ -41,6 +64,12 @@ public class Schedule {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlFile);
             doc.getDocumentElement().normalize();
+
+            // Extract the "objective" value
+            Element objectiveElement = (Element) doc.getElementsByTagName("ObjectiveValue").item(0);
+            if (objectiveElement != null && objectiveElement.hasAttribute("objective")) {
+                schedule.setObjectiveValue(Integer.parseInt(objectiveElement.getAttribute("objective")));
+            }
 
             // Get the list of ScheduledMatch elements
             NodeList matchNodes = doc.getElementsByTagName("ScheduledMatch");
