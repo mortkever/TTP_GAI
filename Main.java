@@ -7,7 +7,8 @@ public class Main {
         PrintHandler printHandler = new PrintHandler();
 
         //String fileName = "Data/NL4.xml";
-        String fileName = "Data/Distances/NL16_distances.txt";
+        String fileName = "Data/Distances/NL4_distances.txt";
+        //String fileName = "Data/Distances/NL16_distances.txt";
 
         // ====================== Distance matrix =========================
         InputHandler inputHandler = new InputHandler(fileName);
@@ -17,7 +18,8 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ======================== Example code ===========================
-        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
+        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL4_Optimal_Solution.xml");
+        //Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
 
         // Stap 4: Schema printen
         System.out.println("===================== Example Schedule =====================");
