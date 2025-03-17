@@ -1,35 +1,35 @@
 import com.gurobi.gurobi.*;
 
-
 public class Main {
     public static void main(String[] args) throws GRBException {
         int upperbound = 3;
         PrintHandler printHandler = new PrintHandler();
 
-        //String fileName = "Data/NL4.xml";
+        // String fileName = "Data/NL4.xml";
         String fileName = "Data/Distances/NL4_distances.txt";
-        //String fileName = "Data/Distances/NL16_distances.txt";
+        // String fileName = "Data/Distances/NL16_distances.txt";
 
         // ====================== Distance matrix =========================
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * nTeams + 1;
+        int timeSlots = 2 * (nTeams - 1) + 1;
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         // ======================== Example code ===========================
         Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL4_Optimal_Solution.xml");
-        //Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
+        // Schedule schedule =
+        // Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
 
         // Stap 4: Schema printen
         System.out.println("===================== Example Schedule =====================");
         schedule.printSchedule();
 
         // Stap 5: Specifieke ronde ophalen
-        //System.out.println("Wedstrijden in Ronde 2:");
-        //for (Match match : schedule.getMatches(2)) {
-        //    System.out.println("  " + match);
-        //}
+        // System.out.println("Wedstrijden in Ronde 2:");
+        // for (Match match : schedule.getMatches(2)) {
+        // System.out.println(" " + match);
+        // }
 
         // Stap 6: Validate solution
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
@@ -37,8 +37,7 @@ public class Main {
         System.out.println("===================== End Example ==========================\n\n");
         // ================================================================
 
-
-        // ======================    Gurobi    ============================
+        // ====================== Gurobi ============================
         System.out.println("======================== Gurobi ============================");
         GRBModel model = new GRBModel(new GRBEnv());
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
@@ -48,14 +47,13 @@ public class Main {
         // -----------------------------------------------------------------------------------------------------------
         GRBLinExpr doelstelling = new GRBLinExpr();
 
-        GRBVar x[][][][] = new GRBVar[nTeams][timeSlots][nTeams][nTeams];
+        GRBVar x[][][][] = new GRBVar[nTeams][timeSlots + 1][nTeams][nTeams];
         for (int t = 0; t < nTeams; t++) {
             for (int s = 0; s < timeSlots; s++) {
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
                         x[t][s][i][j] = model.addVar(0, 1, distanceMatrix[i][j], GRB.BINARY,
                                 "x( s " + s + ", i " + i + ", j " + j + ")");
-                        // doelstelling.addTerm((double) distanceMatrix[i][j], x[t][s][i][j]);
                     }
                 }
             }
@@ -130,7 +128,7 @@ public class Main {
 
         // constraint 4 consecutive home games
         for (int t = 0; t < nTeams; t++) {
-            for (int s = 1; s <= 2 * nTeams - upperbound; s++) {
+            for (int s = 1; s <= 2 * (nTeams - 1) - upperbound; s++) {
                 GRBLinExpr expr = new GRBLinExpr();
                 for (int u = 0; u < upperbound; u++) {
                     expr.addTerm(1.0, x[t][s + u][t][t]);
@@ -166,8 +164,8 @@ public class Main {
 
     public static boolean isArcA(int t, int s, int i, int j, int nTeams) {
         boolean one = (t == i && s == 0);
-        boolean two = (j == t && s == 2 * nTeams);
-        boolean three = (i != j || (i == t && i == j)) && s != 2 * nTeams;
+        boolean two = (j == t && s == (2 * (nTeams - 1) + 1));
+        boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1) + 1) && s != 0;
         return one || two || three;
     }
 }
