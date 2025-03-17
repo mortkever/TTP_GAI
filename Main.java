@@ -49,7 +49,7 @@ public class Main {
 
         GRBVar x[][][][] = new GRBVar[nTeams][timeSlots + 1][nTeams][nTeams];
         for (int t = 0; t < nTeams; t++) {
-            for (int s = 0; s < timeSlots; s++) {
+            for (int s = 0; s < timeSlots + 1; s++) {
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
                         x[t][s][i][j] = model.addVar(0, 1, distanceMatrix[i][j], GRB.BINARY,
@@ -62,7 +62,7 @@ public class Main {
         // Contraint 2: Flow Conversion
         for (int t = 0; t < nTeams; t++) {
             for (int i = 0; i < nTeams; i++) {
-                for (int s = 1; s < timeSlots; s++) {
+                for (int s = 1; s < timeSlots + 1; s++) {
 
                     GRBLinExpr flow = new GRBLinExpr();
                     for (int j = 0; j < nTeams; j++) {
