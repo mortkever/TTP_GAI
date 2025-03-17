@@ -1,12 +1,12 @@
 public class PrintHandler {
-    public int[][] printDistanceMatrixContents(int[][] table) {
-        System.out.println("Table from file:");
+    public void printDistanceMatrixContents(int[][] table) {
+        System.out.println("Distance matrix from file:");
         for (int[] row : table) {
             for (int value : row) {
                 System.out.print(value + "\t");
             }
             System.out.println();
         }
-        return table;
+        System.out.println();
     }
 }
