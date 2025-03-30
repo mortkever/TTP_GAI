@@ -6,7 +6,7 @@ public class Main {
         PrintHandler printHandler = new PrintHandler();
 
         // String fileName = "Data/NL4.xml";
-        String fileName = "Data/Distances/NL4_distances.txt";
+        String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         // ====================== Distance matrix =========================
@@ -15,27 +15,6 @@ public class Main {
         int nTeams = distanceMatrix.length;
         int timeSlots = 2 * (nTeams - 1) + 1;
         printHandler.printDistanceMatrixContents(distanceMatrix);
-
-        // ======================== Example code ===========================
-        Schedule schedule = Schedule.loadScheduleFromXML("Data/Solutions/NL4_Optimal_Solution.xml");
-        // Schedule schedule =
-        // Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
-
-        // Stap 4: Schema printen
-        System.out.println("===================== Example Schedule =====================");
-        schedule.printSchedule();
-
-        // Stap 5: Specifieke ronde ophalen
-        // System.out.println("Wedstrijden in Ronde 2:");
-        // for (Match match : schedule.getMatches(2)) {
-        // System.out.println(" " + match);
-        // }
-
-        // Stap 6: Validate solution
-        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
-        scheduleValidator.validate();
-        System.out.println("===================== End Example ==========================\n\n");
-        // ================================================================
 
         // ====================== Gurobi ============================
         System.out.println("======================== Gurobi ============================");
@@ -130,8 +109,14 @@ public class Main {
         for (int t = 0; t < nTeams; t++) {
             for (int s = 1; s <= 2 * (nTeams - 1) - upperbound; s++) {
                 GRBLinExpr expr = new GRBLinExpr();
-                for (int u = 0; u < upperbound; u++) {
-                    expr.addTerm(1.0, x[t][s + u][t][t]);
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        if (isArcB(t, s, i, j, nTeams)) {
+                            for (int u = 0; u < upperbound; u++) {
+                                expr.addTerm(1.0, x[t][s + u][i][j]);
+                            }
+                        }
+                    }
                 }
                 model.addConstr(expr, GRB.LESS_EQUAL, upperbound - 1, "breaks_" + t);
             }
@@ -160,6 +145,31 @@ public class Main {
             System.out.println("geen oplossing gevonden. ");
         }
 
+        OutputHandeler oh = new OutputHandeler();
+        try {
+            oh.output(x, nTeams, timeSlots, model.get(GRB.DoubleAttr.ObjVal));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Schedule schedule = Schedule.loadScheduleFromXML("output.xml");
+        // Schedule schedule =
+        // Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
+
+        // Stap 4: Schema printen
+        schedule.printSchedule();
+
+        // Stap 5: Specifieke ronde ophalen
+        // System.out.println("Wedstrijden in Ronde 2:");
+        // for (Match match : schedule.getMatches(2)) {
+        // System.out.println(" " + match);
+        // }
+
+        // Stap 6: Validate solution
+        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
+        scheduleValidator.validate();
+        // ================================================================
+
     }
 
     public static boolean isArcA(int t, int s, int i, int j, int nTeams) {
@@ -167,5 +177,11 @@ public class Main {
         boolean two = (j == t && s == (2 * (nTeams - 1) + 1));
         boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1) + 1) && s != 0;
         return one || two || three;
+    }
+
+    public static boolean isArcB(int t, int s, int i, int j, int nTeams) {
+        boolean one = (t == i && t == j && s != 0 && s != 2 * (nTeams - 1));
+        boolean two = (j != t && t != i);
+        return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 }
