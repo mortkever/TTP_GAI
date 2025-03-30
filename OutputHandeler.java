@@ -39,7 +39,7 @@ public class OutputHandeler {
         // matches ipv arcs => waar teams arriveren
         Element matches[] = new Element[timeSlots];
         for (int t = 0; t < nTeams; t++) {
-            for (int s = 0; s < timeSlots + 1; s++) {
+            for (int s = 0; s < timeSlots; s++) {
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
                         if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen

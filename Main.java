@@ -122,6 +122,20 @@ public class Main {
             }
         }
 
+        // constraint 7 No repeater constraint
+        for (int s = 1; s < 2 * (nTeams - 1); s++) {
+            for (int t = 0; t < nTeams - 1; t++) {
+                for (int t_2 = t + 1; t_2 < nTeams; t_2++) {
+                    GRBLinExpr expr = new GRBLinExpr();
+                    expr.addTerm(1.0, x[t][s][t][t_2]);
+                    expr.addTerm(1.0, x[t_2][s][t][t_2]);
+                    expr.addTerm(1.0, x[t_2][s][t_2][t]);
+                    expr.addTerm(1.0, x[t][s][t_2][t]);
+                    model.addConstr(expr, GRB.LESS_EQUAL, 1, "NRC_" + s+t+t_2);
+                }
+            }
+        }
+
         model.optimize();
 
         if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
