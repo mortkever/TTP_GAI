@@ -214,6 +214,10 @@ public class ScheduleValidator {
         return isValid;
     }
 
+    /**
+     * 9. Controleert of match niet gevolgd wordt door de
+     */
+
 
     /**
      * Distance: Calculate the total travel distance for all teams in the schedule.
