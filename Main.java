@@ -1,61 +1,82 @@
-import java.util.Arrays;
-import java.util.List;
+import com.gurobi.gurobi.*;
 
 public class Main {
-    public static void main(String[] args) {
-        // PrintHandler object to easily print
+    public static void main(String[] args) throws GRBException {
+        int upperbound = 3;
         PrintHandler printHandler = new PrintHandler();
 
-        // ---------------------- Read input --------------------------
-        // Path to input file
-        String fileName = "Data/NL4.xml";
+        // String fileName = "Data/NL4.xml";
+        String fileName = "Data/Distances/NL4_distances.txt";
+        // String fileName = "Data/Distances/NL16_distances.txt";
 
-        // Put the table in a 2D array
+        // ====================== Distance matrix =========================
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
-
-        // Print the 2D array
+        int nTeams = distanceMatrix.length;
+        int timeSlots = 2 * (nTeams - 1) + 1;
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
+        // ====================== Gurobi ============================
+        System.out.println("======================== Gurobi ============================");
+        // Set up model
+        GRBEnv env = new GRBEnv();
+        CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
 
-        // ---------------------- Voorbeeld code --------------------------
-        List<Team> teams = Arrays.asList(
-                new Team("Team 1"), new Team("Team 2"), new Team("Team 3"),
-                new Team("Team 4"), new Team("Team 5"), new Team("Team 6")
-        );
+        // Solve
+        GRBModel model = compact.getModel();
+        model.optimize();
 
-        Schedule schedule = new Schedule();
+        // Output
+        GRBVar[][][][] x = compact.getX();
+        if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
+            System.out.println("oplossing gevonden");
+            System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
+            for (int t = 0; t < nTeams; t++) {
+                for (int s = 0; s < timeSlots; s++) {
+                    for (int i = 0; i < nTeams; i++) {
+                        for (int j = 0; j < nTeams; j++) {
+                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+                                System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            System.out.println("geen oplossing gevonden.");
+        }
 
-        schedule.addMatches(1, Arrays.asList(
-                new Match(teams.get(0), teams.get(5)), // Team 1 vs Team 6
-                new Match(teams.get(1), teams.get(4)), // Team 2 vs Team 5
-                new Match(teams.get(2), teams.get(3))  // Team 3 vs Team 4
-        ));
+        OutputHandeler oh = new OutputHandeler();
+        try {
+            oh.output(x, nTeams, timeSlots, model.get(GRB.DoubleAttr.ObjVal));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        schedule.addMatches(2, Arrays.asList(
-                new Match(teams.get(0), teams.get(4)), // Team 1 vs Team 5
-                new Match(teams.get(5), teams.get(3)), // Team 6 vs Team 4
-                new Match(teams.get(1), teams.get(2))  // Team 2 vs Team 3
-        ));
-
-        schedule.addMatches(3, Arrays.asList(
-                new Match(teams.get(0), teams.get(3)), // Team 1 vs Team 4
-                new Match(teams.get(4), teams.get(2)), // Team 5 vs Team 3
-                new Match(teams.get(5), teams.get(1))  // Team 6 vs Team 2
-        ));
+        Schedule schedule = Schedule.loadScheduleFromXML("output.xml");
+        // Schedule schedule =
+        // Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
 
         // Stap 4: Schema printen
         schedule.printSchedule();
 
         // Stap 5: Specifieke ronde ophalen
-        System.out.println("Wedstrijden in Ronde 2:");
-        for (Match match : schedule.getMatches(2)) {
-            System.out.println("  " + match);
-        }
+        // System.out.println("Wedstrijden in Ronde 2:");
+        // for (Match match : schedule.getMatches(2)) {
+        // System.out.println(" " + match);
+        // }
+
+        // Stap 6: Validate solution
+        ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
+        scheduleValidator.validate();
+        // ================================================================
+
     }
+
+    // ==================== Branch & Price ====================
+
+
 
 
 
 }
-
-

@@ -2,7 +2,7 @@ public class Match {
     private Team teamHome;
     private Team teamAway;
 
-    public Match(Team team1, Team team2) {
+    public Match(Team teamHome, Team teamAway) {
         this.teamHome = teamHome;
         this.teamAway = teamAway;
     }

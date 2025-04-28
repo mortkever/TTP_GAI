@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Solution>
+
+    <MetaData>
+        <ObjectiveValue infeasibility="0" objective="8276"/>
+    </MetaData>
+
+    <MatchSchedule>
+        <Movement team="0" from="0" to="0" time="0"/>
+        <Movement team="0" from="0" to="0" time="1"/>
+        <Movement team="0" from="0" to="0" time="2"/>
+        <Movement team="0" from="0" to="2" time="3"/>
+        <Movement team="0" from="2" to="1" time="4"/>
+        <Movement team="0" from="1" to="3" time="5"/>
+        <Movement team="0" from="3" to="0" time="6"/>
+        <Movement team="1" from="1" to="1" time="0"/>
+        <Movement team="1" from="1" to="2" time="1"/>
+        <Movement team="1" from="2" to="0" time="2"/>
+        <Movement team="1" from="0" to="3" time="3"/>
+        <Movement team="1" from="3" to="1" time="4"/>
+        <Movement team="1" from="1" to="1" time="5"/>
+        <Movement team="1" from="1" to="1" time="6"/>
+        <Movement team="2" from="2" to="0" time="0"/>
+        <Movement team="2" from="0" to="2" time="1"/>
+        <Movement team="2" from="2" to="2" time="2"/>
+        <Movement team="2" from="2" to="2" time="3"/>
+        <Movement team="2" from="2" to="3" time="4"/>
+        <Movement team="2" from="3" to="1" time="5"/>
+        <Movement team="2" from="1" to="2" time="6"/>
+        <Movement team="3" from="3" to="1" time="0"/>
+        <Movement team="3" from="1" to="0" time="1"/>
+        <Movement team="3" from="0" to="2" time="2"/>
+        <Movement team="3" from="2" to="3" time="3"/>
+        <Movement team="3" from="3" to="3" time="4"/>
+        <Movement team="3" from="3" to="3" time="5"/>
+        <Movement team="3" from="3" to="3" time="6"/>
+    </MatchSchedule>
+
+</Solution>
