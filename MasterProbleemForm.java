@@ -1,3 +1,4 @@
+import Dummy_Test.ColumnGenerationHelper;
 import com.gurobi.gurobi.*;
 import java.util.*;
 
@@ -103,6 +104,10 @@ public class MasterProbleemForm {
                 if (entry.getValue().get(GRB.DoubleAttr.X) > 0.5)
                     System.out.println(entry.getKey() + " = 1");
             }
+
+            // Print the dual prices
+            ColumnGenerationHelper cgHelper = new ColumnGenerationHelper(model);
+            cgHelper.extractAndPrintDuals();
 
             model.dispose();
             env.dispose();
