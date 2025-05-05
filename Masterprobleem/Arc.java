@@ -13,6 +13,6 @@ public class Arc {
 
     @Override
     public String toString() {
-        return "(" + time + ", " + from + " → " + to + ")";
+        return "(" + time + ", " + from + " -> " + to + ")";
     }
 }
