@@ -101,7 +101,6 @@ public class Main {
         }
 
 
-
         try {
             // ====================== MasterProblem oplossen =========================
             master.buildConstraints();
@@ -140,7 +139,6 @@ public class Main {
             e.printStackTrace();
         }
     }
-
 
     public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
         List<Arc> arcs = original.arcs;
