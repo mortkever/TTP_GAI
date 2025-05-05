@@ -2,155 +2,204 @@ package Masterprobleem;
 
 import com.gurobi.gurobi.*;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Masterproblem {
-    GRBModel model;
-    Map<Integer, List<Tour>> teamTours; // team -> lijst van tours
-    Map<Tour, GRBVar> tourVars;         // elke tour krijgt z'n GRBVar
-    private Map<Pair<Integer, Integer>, List<Tour>> teamSlotMap;
-    private Map<Triple<Integer, Integer, Integer>, List<Tour>> nrcMap = new HashMap<>();
+    private final TourRepository tourRepo;
+    private GRBEnv env;
+    private GRBModel model;
+    private Map<Integer, List<GRBVar>> lambdaVars;
+    private Map<String, List<int[]>> arcIndex;
+
+    public Masterproblem(TourRepository tourRepo) {
+        this.tourRepo = tourRepo;
+    }
 
 
 
-    public Masterproblem(GRBEnv env) throws GRBException {
+    public void addTour(int team, Tour tour) {
+        tourRepo.addTour(team, tour);
+    }
+
+    public void buildConstraints() throws GRBException {
+        Map<Integer, List<Tour>> allTours = tourRepo.getAllTours();
+        int numTeams = allTours.size();
+        int numSlots = 2 * (numTeams - 1);
+
+        env = new GRBEnv(true);
+        env.set("logFile", "master.log");
+        env.start();
         model = new GRBModel(env);
-        teamTours = new HashMap<>();
-        tourVars = new HashMap<>();
-        this.teamSlotMap = new HashMap<>();
-        this.nrcMap = new HashMap<>();
+        lambdaVars = new HashMap<>();
+        arcIndex = new HashMap<>();
 
 
-    }
+        // 1. Maak lambda-variabelen
+        for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
+            int team = entry.getKey();
+            List<GRBVar> teamVars = new ArrayList<>();
+            List<Tour> teamTours = entry.getValue();
 
-    public void addTour(Tour tour) throws GRBException {
-        teamTours.computeIfAbsent(tour.team, k -> new ArrayList<>()).add(tour);
-        // 1ste variable // Doelfuntctie
-        GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY,
-                "kt_" + tour.team + "_" + teamTours.get(tour.team).size());
-        tourVars.put(tour, var);
+            for (int p = 0; p < teamTours.size(); p++) {
+                Tour tour = teamTours.get(p);
+                GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
+                teamVars.add(var);
 
-        for (Match match : tour.matches) {
-            int s = match.timeSlot;
-
-            Pair<Integer, Integer> keyHome = new Pair<>(match.homeTeam, s);
-            Pair<Integer, Integer> keyAway = new Pair<>(match.awayTeam, s);
-
-            teamSlotMap.computeIfAbsent(keyHome, k -> new ArrayList<>()).add(tour);
-            teamSlotMap.computeIfAbsent(keyAway, k -> new ArrayList<>()).add(tour);
-
-            int t1 = Math.min(match.homeTeam, match.awayTeam);
-            int t2 = Math.max(match.homeTeam, match.awayTeam);
-            Triple<Integer, Integer, Integer> key = new Triple<>(t1, t2, s);
-            nrcMap.computeIfAbsent(key, k -> new ArrayList<>()).add(tour);
-        }
-    }
-
-    public void buildConstraints(Set<Integer> teams, Set<Integer> timeSlots) throws GRBException {
-        // 1. Convexiteit: precies 1 tour per team // Geen fracties geen meerdere tours
-        for (int t : teamTours.keySet()) {
-            GRBLinExpr expr = new GRBLinExpr();
-            for (Tour tour : teamTours.get(t)) {
-                expr.addTerm(1.0, tourVars.get(tour));
+                // Arc-index vullen voor latere constraints
+                for (Arc arc : tour.arcs) {
+                    String key = arc.time + "_" + arc.from + "_" + arc.to;
+                    arcIndex.computeIfAbsent(key, k -> new ArrayList<>()).add(new int[]{team, p});
+                }
             }
-            model.addConstr(expr, GRB.EQUAL, 1.0, "convexity_team_" + t);
+
+            lambdaVars.put(team, teamVars);
         }
 
-        // 2. Coupling constraints: elke team speelt in elk tijdslot
-//        for (int t : teams) {
-//            for (int s : timeSlots) {
-//                Pair<Integer, Integer> key = new Pair<>(t, s);
-//                List<Tour> involvedTours = teamSlotMap.getOrDefault(key, new ArrayList<>());
-//
-//                if (!involvedTours.isEmpty()) {
-//                    GRBLinExpr expr = new GRBLinExpr();
-//                    for (Tour tour : involvedTours) {
-//                        expr.addTerm(1.0, tourVars.get(tour));
-//                    }
-//                    model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_t" + t + "_s" + s);
-//                }
+        // 2. Convexiteitsrestrictie: één tour per team
+        for (Map.Entry<Integer, List<GRBVar>> entry : lambdaVars.entrySet()) {
+            GRBLinExpr expr = new GRBLinExpr();
+            for (GRBVar var : entry.getValue()) {
+                expr.addTerm(1.0, var);
+            }
+            model.addConstr(expr, GRB.EQUAL, 1.0, "oneTourPerTeam_" + entry.getKey());
+        }
+
+        // 3. Synchronisatieconstraint (9): elk arc precies één keer
+//        for (Map.Entry<String, List<int[]>> arcEntry : arcIndex.entrySet()) {
+//            GRBLinExpr expr = new GRBLinExpr();
+//            for (int[] tp : arcEntry.getValue()) {
+//                GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
+//                expr.addTerm(1.0, lambda);
 //            }
+//            model.addConstr(expr, GRB.EQUAL, 1.0, "matchOnce_" + arcEntry.getKey());
 //        }
 
-        for (int i : teams) {
-            for (int j : teams) {
-                if (i != j) {
-                    // (i speelt thuis tegen j)
-                    GRBLinExpr exprHome = new GRBLinExpr();
-                    for (Tour tour : teamTours.get(i)) {
-                        for (Match match : tour.matches) {
-                            if (match.homeTeam == i && match.awayTeam == j) {
-                                exprHome.addTerm(1.0, tourVars.get(tour));
-                            }
-                        }
-                    }
-                    model.addConstr(exprHome, GRB.EQUAL, 1.0, "match_home_" + i + "_" + j);
+        // Helper variable voor constraint 9
+        Map<Integer, Map<Integer, List<int[]>>> matchParticipation = new HashMap<>();
 
-                    // (j speelt thuis tegen i)
-                    GRBLinExpr exprAway = new GRBLinExpr();
-                    for (Tour tour : teamTours.get(j)) {
-                        for (Match match : tour.matches) {
-                            if (match.homeTeam == j && match.awayTeam == i) {
-                                exprAway.addTerm(1.0, tourVars.get(tour));
-                            }
-                        }
-                    }
-                    model.addConstr(exprAway, GRB.EQUAL, 1.0, "match_home_" + j + "_" + i);
-                }
+        for (int team = 0; team < numTeams; team++) {
+            matchParticipation.put(team, new HashMap<>());
+            for (int s = 0; s < numSlots; s++) {
+                matchParticipation.get(team).put(s, new ArrayList<>());
             }
         }
 
-        // 3. Constraint
-        for (int t1 : teams) {
-            for (int t2 : teams) {
-                if (t1 < t2) {
-                    for (int s : timeSlots) {
-                        if (s < 2 * (teams.size() - 1)) {
-                            Triple<Integer, Integer, Integer> key1 = new Triple<>(t1, t2, s);
-                            Triple<Integer, Integer, Integer> key2 = new Triple<>(t1, t2, s + 1);
+        for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
+            int team = entry.getKey();
+            List<Tour> tours = entry.getValue();
 
-                            List<Tour> toursS = nrcMap.getOrDefault(key1, new ArrayList<>());
-                            List<Tour> toursNext = nrcMap.getOrDefault(key2, new ArrayList<>());
+            for (int p = 0; p < tours.size(); p++) {
+                for (Arc arc : tours.get(p).arcs) {
+                    int s = arc.time;
+                    int i = arc.from;
+                    int j = arc.to;
 
-                            if (!toursS.isEmpty() || !toursNext.isEmpty()) {
-                                GRBLinExpr expr = new GRBLinExpr();
-                                for (Tour tour : toursS) {
-                                    expr.addTerm(1.0, tourVars.get(tour));
-                                }
-                                for (Tour tour : toursNext) {
-                                    expr.addTerm(1.0, tourVars.get(tour));
-                                }
+                    // team speelt thuis (van = team)
+                    if (i == team) {
+                        matchParticipation.get(team).get(s).add(new int[]{team, p});
+                        System.out.println(" We geraken in de eerste IF");
+                    }
 
-                                String cname = "NRC_t" + t1 + "_t" + t2 + "_s" + s;
-                                model.addConstr(expr, GRB.LESS_EQUAL, 1.0, cname);
-                            }
-                        }
+                    // team speelt uit (naar = team)
+                    if (j == team && i != j) { // sluit self-loops uit
+                        matchParticipation.get(team).get(s).add(new int[]{team, p});
+                        System.out.println(" We geraken in de tweede IF");
+
                     }
                 }
             }
         }
 
+        // 3. Synchronisatieconstraint (9): Elk team speelt precies 1 wedstrijd per tijdstip, als thuis- of uitteam
+        for (int t = 0; t < numTeams; t++) {
+            for (int s = 0; s < numSlots; s++) {
+                GRBLinExpr expr = new GRBLinExpr();
 
+                for (int[] tp : matchParticipation.get(t).get(s)) {
+                    GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
+                    expr.addTerm(1.0, lambda);
+                }
 
-
-    }
-
-    public void optimize() throws GRBException {
-        model.optimize();
-    }
-
-    public Map<Tour, Double> getSolution() throws GRBException {
-        Map<Tour, Double> sol = new HashMap<>();
-        for (Tour tour : tourVars.keySet()) {
-            double val = tourVars.get(tour).get(GRB.DoubleAttr.X);
-            sol.put(tour, val);
+                model.addConstr(expr, GRB.EQUAL, 1.0, "teamTimeMatch_" + t + "_" + s);
+            }
         }
-        return sol;
+
+
+        // 4. NRC constraint (12): geen heen- en terug direct achter elkaar
+        for (int t1 = 0; t1 < numTeams; t1++) {
+            for (int t2 = t1 + 1; t2 < numTeams; t2++) {
+                for (int s = 0; s < numSlots - 1; s++) {
+                    String key1 = s + "_" + t1 + "_" + t2;
+                    String key2 = (s + 1) + "_" + t2 + "_" + t1;
+
+                    List<int[]> list1 = arcIndex.getOrDefault(key1, new ArrayList<>());
+                    List<int[]> list2 = arcIndex.getOrDefault(key2, new ArrayList<>());
+
+                    for (int[] tp1 : list1) {
+                        for (int[] tp2 : list2) {
+                            GRBLinExpr expr = new GRBLinExpr();
+                            expr.addTerm(1.0, lambdaVars.get(tp1[0]).get(tp1[1]));
+                            expr.addTerm(1.0, lambdaVars.get(tp2[0]).get(tp2[1]));
+                            model.addConstr(expr, GRB.LESS_EQUAL, 1.0,
+                                    "nrc_" + tp1[0] + "_" + tp1[1] + "__" + tp2[0] + "_" + tp2[1]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    public double getObjective() throws GRBException {
-        return model.get(GRB.DoubleAttr.ObjVal);
+    public void optimize() {
+        try {
+            System.out.println("Starting optimization...");
+            model.optimize();
+
+            int status = model.get(GRB.IntAttr.Status);
+            if (status == GRB.OPTIMAL) {
+                double objVal = model.get(GRB.DoubleAttr.ObjVal);
+                System.out.println("Optimal solution found with total cost: " + objVal);
+            } else if (status == GRB.INFEASIBLE) {
+                System.out.println("Model is infeasible.");
+            } else if (status == GRB.UNBOUNDED) {
+                System.out.println("Model is unbounded.");
+            } else {
+                System.out.println("Optimization ended with status: " + status);
+            }
+        } catch (GRBException e) {
+            System.err.println("Error during optimization: " + e.getMessage());
+        }
+    }
+
+    public Map<Integer, Tour> getSolution() throws GRBException {
+        Map<Integer, Tour> selectedTours = new HashMap<>();
+
+        for (Map.Entry<Integer, List<GRBVar>> entry : lambdaVars.entrySet()) {
+            int team = entry.getKey();
+            List<GRBVar> vars = entry.getValue();
+            List<Tour> teamTours = tourRepo.getAllTours().get(team);
+
+            boolean found = false;
+            for (int i = 0; i < vars.size(); i++) {
+                double value = vars.get(i).get(GRB.DoubleAttr.X);
+                if (value > 0.5) { // geselecteerde tour
+                    selectedTours.put(team, teamTours.get(i));
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                System.out.println("Waarschuwing: geen tour geselecteerd voor team " + team);
+            }
+        }
+
+        return selectedTours;
+    }
+
+    public TourRepository getTourRepo() {
+        return tourRepo;
     }
 }
-

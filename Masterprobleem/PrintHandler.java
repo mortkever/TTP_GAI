@@ -1,5 +1,8 @@
 package Masterprobleem;
 
+import java.util.List;
+import java.util.Map;
+
 public class PrintHandler {
     public void printDistanceMatrixContents(int[][] table) {
         System.out.println("Distance matrix from file:");
@@ -11,4 +14,5 @@ public class PrintHandler {
         }
         System.out.println();
     }
+
 }
