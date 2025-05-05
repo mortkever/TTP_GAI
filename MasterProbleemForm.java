@@ -1,4 +1,4 @@
-import Dummy_Test.ColumnGenerationHelper;
+import Masterprobleem.ColumnGenerationHelper;
 import com.gurobi.gurobi.*;
 import java.util.*;
 
@@ -105,9 +105,9 @@ public class MasterProbleemForm {
                     System.out.println(entry.getKey() + " = 1");
             }
 
-            // Print the dual prices
-            ColumnGenerationHelper cgHelper = new ColumnGenerationHelper(model);
-            cgHelper.extractAndPrintDuals();
+            //// Print the dual prices
+            //ColumnGenerationHelper cgHelper = new ColumnGenerationHelper(model);
+            //cgHelper.extractAndPrintDuals();
 
             model.dispose();
             env.dispose();

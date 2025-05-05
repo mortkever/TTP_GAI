@@ -98,6 +98,13 @@ public class Main {
             master.buildConstraints();
             master.optimize();
 
+            // Get dual values
+            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(model.relax());
+            relaxedModel.optimize();
+            Map<String, Double> dualPrices = relaxedModel.getDualPrices();
+            relaxedModel.printDuals();
+
+            // Get the integer model's solution
             Map<Integer, Tour> finalSolution = master.getSolution();
 
             System.out.println("------------ Geselecteerde tours in masteroplossing -------------");

@@ -58,7 +58,7 @@ public class Masterproblem {
             lambdaVars.put(team, teamVars);
         }
 
-        // 2. Convexiteitsrestrictie: één tour per team
+        // 2. Convexiteitsrestrictie (10): één tour per team
         for (Map.Entry<Integer, List<GRBVar>> entry : lambdaVars.entrySet()) {
             GRBLinExpr expr = new GRBLinExpr();
             for (GRBVar var : entry.getValue()) {
@@ -67,7 +67,7 @@ public class Masterproblem {
             model.addConstr(expr, GRB.EQUAL, 1.0, "oneTourPerTeam_" + entry.getKey());
         }
 
-        // 3. Synchronisatieconstraint (9): elk arc precies één keer
+        // 3. Synchronisatieconstraint/coupling constraint (9): elk arc precies één keer
 //        for (Map.Entry<String, List<int[]>> arcEntry : arcIndex.entrySet()) {
 //            GRBLinExpr expr = new GRBLinExpr();
 //            for (int[] tp : arcEntry.getValue()) {
@@ -113,7 +113,7 @@ public class Masterproblem {
             }
         }
 
-        // 3. Synchronisatieconstraint (9): Elk team speelt precies 1 wedstrijd per tijdstip, als thuis- of uitteam
+        // 3. Synchronisatieconstraint/coupling constraint (9): Elk team speelt precies 1 wedstrijd per tijdstip, als thuis- of uitteam
         for (int t = 0; t < numTeams; t++) {
             for (int s = 0; s < numSlots; s++) {
                 GRBLinExpr expr = new GRBLinExpr();

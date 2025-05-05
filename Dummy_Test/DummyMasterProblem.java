@@ -1,5 +1,7 @@
 package Dummy_Test;
 
+import Masterprobleem.ColumnGenerationHelper;
+import Masterprobleem.InputHandler;
 import com.gurobi.gurobi.*;
 import java.util.*;
 
@@ -7,6 +9,13 @@ public class DummyMasterProblem {
 
     public static void main(String[] args) {
         try {
+            // Random
+            String fileName = "Data/Distances/NL4_distances.txt";
+            Masterprobleem.InputHandler inputHandler = new InputHandler(fileName);
+            int[][] distanceMatrix = inputHandler.getDistanceMatrix();
+            int nTeams = distanceMatrix.length;
+            int timeSlots = 2 * (nTeams - 1) + 1;
+
             // Set up Gurobi environment
             GRBEnv env = new GRBEnv(true);
             env.set("logFile", "dummy_master.log");
@@ -103,27 +112,15 @@ public class DummyMasterProblem {
             relaxed.optimize();
 
             // Extract dual prices
-            ColumnGenerationHelper cgHelper = new ColumnGenerationHelper(relaxed);
-            cgHelper.extractAndPrintDuals();
-            Map<String, Double> dualPrices = cgHelper.getDualPrices();
+            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
+            relaxedModel.extractDuals();
+            Map<String, Double> dualPrices = relaxedModel.getDualPrices();
+            relaxedModel.printDuals();
 
-            // Setup dummy distance matrix
-            int[][] dummyDistance = {
-                    {0, 745, 665, 929},
-                    {745, 0, 80, 337},
-                    {665, 80, 0, 380},
-                    {929, 337, 380, 0}
-            };
-
-            // Solve pricing for Team 0
-            int team = 0;
-            double lambdaDual  = dualPrices.get("one_tour_" + team);
-
-            Dummy_PricingProblem pricing = new Dummy_PricingProblem(team, lambdaDual , dualPrices, dummyDistance);
-            pricing.buildAndSolvePricingGraph(); // this will build the graph
-
-            // Assume your buildAndSolvePricingGraph() internally prints steps
-            // OR call pricing.printNewColumn(path) if you return a path!
+            // test to get modified cost
+            // arguments: t, i, j, s, duals, distanceMatrix, numTeams
+            double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
+            System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
             model.dispose();
             relaxed.dispose();
