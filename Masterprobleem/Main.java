@@ -27,7 +27,7 @@ public class Main {
         List<Tour> initialTours = generateInitialTours(distanceMatrix, 2 * (nTeams - 1), upperbound);
 
 
-        MasterProblem master = new MasterProblem(new GRBEnv());
+        Masterproblem master = new Masterproblem(new GRBEnv());
 
         for (Tour tour : initialTours) {
             if (validateTour(tour, distanceMatrix, upperbound)) {

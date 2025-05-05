@@ -14,7 +14,7 @@ public class Masterproblem {
 
 
 
-    public MasterProblem(GRBEnv env) throws GRBException {
+    public Masterproblem(GRBEnv env) throws GRBException {
         model = new GRBModel(env);
         teamTours = new HashMap<>();
         tourVars = new HashMap<>();
