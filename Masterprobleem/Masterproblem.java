@@ -67,85 +67,45 @@ public class Masterproblem {
             model.addConstr(expr, GRB.EQUAL, 1.0, "oneTourPerTeam_" + entry.getKey());
         }
 
-        // 3. Synchronisatieconstraint/coupling constraint (9): elk arc precies één keer
-//        for (Map.Entry<String, List<int[]>> arcEntry : arcIndex.entrySet()) {
-//            GRBLinExpr expr = new GRBLinExpr();
-//            for (int[] tp : arcEntry.getValue()) {
-//                GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
-//                expr.addTerm(1.0, lambda);
-//            }
-//            model.addConstr(expr, GRB.EQUAL, 1.0, "matchOnce_" + arcEntry.getKey());
-//        }
-
-        // Helper variable voor constraint 9
-        Map<Integer, Map<Integer, List<int[]>>> matchParticipation = new HashMap<>();
-
-        for (int team = 0; team < numTeams; team++) {
-            matchParticipation.put(team, new HashMap<>());
-            for (int s = 0; s < numSlots; s++) {
-                matchParticipation.get(team).put(s, new ArrayList<>());
+        // 3. Synchronisatieconstraint (9): elk arc precies één keer
+        for (Map.Entry<String, List<int[]>> arcEntry : arcIndex.entrySet()) {
+            GRBLinExpr expr = new GRBLinExpr();
+            for (int[] tp : arcEntry.getValue()) {
+                GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
+                expr.addTerm(1.0, lambda);
             }
+            model.addConstr(expr, GRB.EQUAL, 1.0, "matchOnce_" + arcEntry.getKey());
         }
 
-        for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
-            int team = entry.getKey();
-            List<Tour> tours = entry.getValue();
-
-            for (int p = 0; p < tours.size(); p++) {
-                for (Arc arc : tours.get(p).arcs) {
-                    int s = arc.time;
-                    int i = arc.from;
-                    int j = arc.to;
-
-                    // team speelt thuis (van = team)
-                    if (i == team) {
-                        matchParticipation.get(team).get(s).add(new int[]{team, p});
-                        System.out.println(" We geraken in de eerste IF");
-                    }
-
-                    // team speelt uit (naar = team)
-                    if (j == team && i != j) { // sluit self-loops uit
-                        matchParticipation.get(team).get(s).add(new int[]{team, p});
-                        System.out.println(" We geraken in de tweede IF");
-
-                    }
-                }
-            }
-        }
-
-        // 3. Synchronisatieconstraint/coupling constraint (9): Elk team speelt precies 1 wedstrijd per tijdstip, als thuis- of uitteam
-        for (int t = 0; t < numTeams; t++) {
-            for (int s = 0; s < numSlots; s++) {
-                GRBLinExpr expr = new GRBLinExpr();
-
-                for (int[] tp : matchParticipation.get(t).get(s)) {
-                    GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
-                    expr.addTerm(1.0, lambda);
-                }
-
-                model.addConstr(expr, GRB.EQUAL, 1.0, "teamTimeMatch_" + t + "_" + s);
-            }
-        }
-
-
-        // 4. NRC constraint (12): geen heen- en terug direct achter elkaar
+         //Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
         for (int t1 = 0; t1 < numTeams; t1++) {
             for (int t2 = t1 + 1; t2 < numTeams; t2++) {
                 for (int s = 0; s < numSlots - 1; s++) {
-                    String key1 = s + "_" + t1 + "_" + t2;
-                    String key2 = (s + 1) + "_" + t2 + "_" + t1;
 
-                    List<int[]> list1 = arcIndex.getOrDefault(key1, new ArrayList<>());
-                    List<int[]> list2 = arcIndex.getOrDefault(key2, new ArrayList<>());
+                    String arc1Key = s + "_" + t1 + "_" + t2;       // heenwedstrijd
+                    String arc2Key = (s + 1) + "_" + t2 + "_" + t1; // terugwedstrijd
 
-                    for (int[] tp1 : list1) {
-                        for (int[] tp2 : list2) {
-                            GRBLinExpr expr = new GRBLinExpr();
-                            expr.addTerm(1.0, lambdaVars.get(tp1[0]).get(tp1[1]));
-                            expr.addTerm(1.0, lambdaVars.get(tp2[0]).get(tp2[1]));
-                            model.addConstr(expr, GRB.LESS_EQUAL, 1.0,
-                                    "nrc_" + tp1[0] + "_" + tp1[1] + "__" + tp2[0] + "_" + tp2[1]);
+                    List<int[]> arc1Tours = arcIndex.getOrDefault(arc1Key, new ArrayList<>());
+                    List<int[]> arc2Tours = arcIndex.getOrDefault(arc2Key, new ArrayList<>());
+
+                    // Voeg enkel een constraint toe als beide zijden iets bevatten
+                    if (!arc1Tours.isEmpty() && !arc2Tours.isEmpty()) {
+                        GRBLinExpr expr = new GRBLinExpr();
+
+                        for (int[] tp : arc1Tours) {
+                            int team = tp[0];
+                            int p = tp[1];
+                            expr.addTerm(1.0, lambdaVars.get(team).get(p));
                         }
+
+                        for (int[] tp : arc2Tours) {
+                            int team = tp[0];
+                            int p = tp[1];
+                            expr.addTerm(1.0, lambdaVars.get(team).get(p));
+                        }
+
+                        model.addConstr(expr, GRB.LESS_EQUAL, 1.0,
+                                "nrc_" + t1 + "_" + t2 + "_s" + s);
                     }
                 }
             }
@@ -202,4 +162,6 @@ public class Masterproblem {
     public TourRepository getTourRepo() {
         return tourRepo;
     }
+
+
 }

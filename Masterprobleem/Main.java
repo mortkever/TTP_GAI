@@ -77,6 +77,12 @@ public class Main {
             master.addTour(t, tour);
         }
 
+//        for (int team = 0; team < nTeams; team++) {
+//            Tour original = master.getTourRepo().getAllTours().get(team).get(0);
+//            Tour shifted = generateShiftedHomeGameTour(original, team, distanceMatrix);
+//            master.addTour(team, shifted);
+//        }
+
         System.out.println("------------ Tours in MasterProblem (initieel) -------------");
 
         Map<Integer, List<Tour>> allTours = master.getTourRepo().getAllTours();
@@ -93,6 +99,9 @@ public class Main {
                 }
             }
         }
+
+
+
         try {
             // ====================== MasterProblem oplossen =========================
             master.buildConstraints();
@@ -121,6 +130,50 @@ public class Main {
         } catch (GRBException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
+        List<Arc> arcs = original.arcs;
+        int n = arcs.size();
+
+        // Zoek tweede home game (arc.to == team)
+        int homeCount = 0;
+        int splitIndex = -1;
+        for (int i = 0; i < n; i++) {
+            if (arcs.get(i).to == team) {
+                homeCount++;
+                if (homeCount == 2) {
+                    splitIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Als we geen tweede home game vinden, geef originele tour terug
+        if (splitIndex == -1) return original;
+
+        List<Arc> firstPart = arcs.subList(splitIndex, n);
+        List<Arc> secondPart = arcs.subList(0, splitIndex);
+
+        List<Arc> newTourArcs = new ArrayList<>();
+
+        // Herbouw tour met geüpdatete tijdstippen
+        int newTime = 0;
+        for (Arc arc : firstPart) {
+            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
+        }
+        for (Arc arc : secondPart) {
+            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
+        }
+
+        // Bereken nieuwe kost
+        double cost = 0;
+        for (Arc a : newTourArcs) {
+            cost += distanceMatrix[a.from][a.to];
+        }
+
+        return new Tour(newTourArcs, cost);
     }
 
 }
