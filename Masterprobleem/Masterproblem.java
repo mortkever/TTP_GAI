@@ -78,34 +78,41 @@ public class Masterproblem {
         }
 
          //Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
-        for (int t1 = 0; t1 < numTeams; t1++) {
-            for (int t2 = t1 + 1; t2 < numTeams; t2++) {
+        for (int t = 0; t < numTeams; t++) {
+            for (int tPrime = t + 1; tPrime < numTeams; tPrime++) {
                 for (int s = 0; s < numSlots - 1; s++) {
 
-                    String arc1Key = s + "_" + t1 + "_" + t2;       // heenwedstrijd
-                    String arc2Key = (s + 1) + "_" + t2 + "_" + t1; // terugwedstrijd
+                    // Arc (t, t', s) en (t', t, s) in tours van team t
+                    String arc1_tt_s = s + "_" + t + "_" + tPrime;
+                    String arc2_tprime_t_s = s + "_" + tPrime + "_" + t;
 
-                    List<int[]> arc1Tours = arcIndex.getOrDefault(arc1Key, new ArrayList<>());
-                    List<int[]> arc2Tours = arcIndex.getOrDefault(arc2Key, new ArrayList<>());
+                    // Arc (t, t', s+1) en (t', t, s+1) in tours van team t'
+                    String arc3_tt_s1 = (s + 1) + "_" + t + "_" + tPrime;
+                    String arc4_tprime_t_s1 = (s + 1) + "_" + tPrime + "_" + t;
 
-                    // Voeg enkel een constraint toe als beide zijden iets bevatten
-                    if (!arc1Tours.isEmpty() && !arc2Tours.isEmpty()) {
+                    List<int[]> pt1 = arcIndex.getOrDefault(arc1_tt_s, new ArrayList<>());
+                    List<int[]> pt2 = arcIndex.getOrDefault(arc2_tprime_t_s, new ArrayList<>());
+                    List<int[]> pt3 = arcIndex.getOrDefault(arc3_tt_s1, new ArrayList<>());
+                    List<int[]> pt4 = arcIndex.getOrDefault(arc4_tprime_t_s1, new ArrayList<>());
+
+                    if ((!pt1.isEmpty() || !pt2.isEmpty()) && (!pt3.isEmpty() || !pt4.isEmpty())) {
                         GRBLinExpr expr = new GRBLinExpr();
 
-                        for (int[] tp : arc1Tours) {
-                            int team = tp[0];
-                            int p = tp[1];
-                            expr.addTerm(1.0, lambdaVars.get(team).get(p));
+                        for (int[] tp : pt1) {
+                            if (tp[0] == t) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
                         }
-
-                        for (int[] tp : arc2Tours) {
-                            int team = tp[0];
-                            int p = tp[1];
-                            expr.addTerm(1.0, lambdaVars.get(team).get(p));
+                        for (int[] tp : pt2) {
+                            if (tp[0] == t) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
+                        }
+                        for (int[] tp : pt3) {
+                            if (tp[0] == tPrime) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
+                        }
+                        for (int[] tp : pt4) {
+                            if (tp[0] == tPrime) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
                         }
 
                         model.addConstr(expr, GRB.LESS_EQUAL, 1.0,
-                                "nrc_" + t1 + "_" + t2 + "_s" + s);
+                                "nrc_" + t + "_" + tPrime + "_s" + s);
                     }
                 }
             }
