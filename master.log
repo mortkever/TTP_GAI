@@ -1,0 +1,102 @@
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 08:37:01 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz, instruction set [SSE2|AVX|AVX2]
+Thread count: 6 physical cores, 12 logical processors, using up to 12 threads
+
+Optimize a model with 33 rows, 4 columns and 34 nonzeros
+Model fingerprint: 0x4cb9b0a4
+Variable types: 0 continuous, 4 integer (4 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 12 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 08:38:31 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz, instruction set [SSE2|AVX|AVX2]
+Thread count: 6 physical cores, 12 logical processors, using up to 12 threads
+
+Optimize a model with 33 rows, 4 columns and 34 nonzeros
+Model fingerprint: 0x4cb9b0a4
+Variable types: 0 continuous, 4 integer (4 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 12 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 08:41:08 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz, instruction set [SSE2|AVX|AVX2]
+Thread count: 6 physical cores, 12 logical processors, using up to 12 threads
+
+Optimize a model with 5 rows, 4 columns and 6 nonzeros
+Model fingerprint: 0xf03dfc05
+Variable types: 0 continuous, 4 integer (4 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve time: 0.00s
+
+Explored 0 nodes (0 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 1 (of 12 available processors)
+
+Solution count 0
+
+Model is infeasible
+Best objective -, best bound -, gap -
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 08:54:45 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 08:58:06 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+
+Gurobi 11.0.3 (win64, Java) logging started Mon May  5 09:02:04 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31

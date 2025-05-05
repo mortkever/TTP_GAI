@@ -61,11 +61,13 @@ public class Main {
         schedule.printSchedule();
 
         // Stap 5: Specifieke ronde ophalen
-        // System.out.println("Wedstrijden in Ronde 2:");
-        // for (Match match : schedule.getMatches(2)) {
-        // System.out.println(" " + match);
-        // }
-
+        System.out.println("Wedstrijden in Ronde 2:");
+        for (int ronde = 1; ronde <= 4; ronde++) {
+            System.out.println("Wedstrijden in Ronde " + ronde + ":");
+            for (Match match : schedule.getMatches(ronde)) {
+                System.out.println(" " + match);
+            }
+        }
         // Stap 6: Validate solution
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
         scheduleValidator.validate();
