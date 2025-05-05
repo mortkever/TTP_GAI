@@ -32,7 +32,11 @@ public class Main {
         GRBModel model = compact.getModel();
         model.optimize();
 
-        GRBVar[][][][] x = compact.getX();
+        FirstSolution firstSolution = new FirstSolution(nTeams,timeSlots,distanceMatrix);
+        firstSolution.getFirstSolution();
+        GRBVar[][][][] x = firstSolution.getFirstSolution();
+
+        //GRBVar[][][][] x = compact.getX();
 
         if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
             System.out.println("Oplossing gevonden");
