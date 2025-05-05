@@ -1,9 +1,8 @@
-package Masterprobleem.collumnGen;
+package Masterprobleem.columnGen;
 
 import Masterprobleem.Arc;
 import Masterprobleem.Tour;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ShortestPathGenerator {
@@ -24,7 +23,7 @@ public class ShortestPathGenerator {
         ShortestPathGenerator.costs = costs;
     }
 
-    public static boolean resourceExtentionFunction(int team, int time, int from, int to, int b) {
+    private static boolean resourceExtentionFunction(int team, int time, int from, int to, int b) {
         if (((visits[to] == 1 && to != team) || (visits[to] == 3 && to == team)) && time != 2 * (nTeams - 1))
             return false;
         if (isArcB(team, time, from, to, nTeams)) {
@@ -38,13 +37,14 @@ public class ShortestPathGenerator {
         return true;
     }
 
-    private static Tour generateTour(int team) {
+    public static Tour generateTour(int team) {
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
         DFSrec(team, 0, team, 0);
 
-        return new Tour(bestArcs, 0);
+        System.err.println("Best cost" + bestCost);
+        return new Tour(bestArcs, bestCost);
     }
 
     private static boolean DFSrec(int team, int s, int from, int cost) {
