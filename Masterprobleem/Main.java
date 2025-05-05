@@ -111,6 +111,22 @@ public class Main {
             master.buildConstraints();
             master.optimize();
 
+            // Relax to LP for dual prices
+            GRBModel relaxed = master.getModel().relax();
+            relaxed.optimize();
+
+            // Extract dual prices
+            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
+            relaxedModel.extractDuals();
+            Map<String, Double> dualPrices = relaxedModel.getDualPrices();
+            relaxedModel.printDuals();
+
+            // test to get modified cost
+            // arguments: t, i, j, s, duals, distanceMatrix, numTeams
+            double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
+            System.out.println("\nMain:\n\tModified cost: " + test_cost);
+
+            // Get the integer model's solution
             Map<Integer, Tour> finalSolution = master.getSolution();
 
             System.out.println("------------ Geselecteerde tours in masteroplossing -------------");
