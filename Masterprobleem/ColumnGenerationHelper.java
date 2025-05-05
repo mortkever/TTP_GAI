@@ -46,7 +46,7 @@ public class ColumnGenerationHelper {
             for (GRBConstr constr : masterModel.getConstrs()) {
                 String constrName = constr.get(GRB.StringAttr.ConstrName);
                 double dual = constr.get(GRB.DoubleAttr.Pi); // Pi = dual value
-                System.out.println("\n\nConstraint: " + constrName + ", Dual Price: " + dual);
+                //System.out.println("\n\nConstraint: " + constrName + ", Dual Price: " + dual);
                 dualPrices.put(constrName, dual);
             }
         } catch (GRBException e) {
@@ -86,14 +86,20 @@ public class ColumnGenerationHelper {
 
         // Y: subtract π_(ts) + π_(is) if i ≠ t (i.e., this is an away game)
         if (i != t) {
-            String pi_ts_key = "slot_" + s + "_team_" + t;
-            String pi_is_key = "slot_" + s + "_team_" + i;
+            double pi_ts = 0.0;
+            double pi_is = 0.0;
 
-            double pi_ts = duals.getOrDefault(pi_ts_key, 0.0);
-            double pi_is = duals.getOrDefault(pi_is_key, 0.0);
+            for (int opp = 0; opp < numTeams; opp++) {
+                String pi_ts_key = "matchOnce_" + t + "_" + opp + "_" + s;
+                String pi_is_key = "matchOnce_" + i + "_" + opp + "_" + s;
+
+                pi_ts += duals.getOrDefault(pi_ts_key, 0.0);
+                pi_is += duals.getOrDefault(pi_is_key, 0.0);
+            }
+
             System.out.println("Y:");
-            System.out.println("\tpi_ts: " + pi_ts);
-            System.out.println("\tpi_is: " + pi_is);
+            System.out.println("\tpi_ts sum: " + pi_ts);
+            System.out.println("\tpi_is sum: " + pi_is);
 
             cost -= (pi_ts + pi_is);
         }
@@ -107,17 +113,24 @@ public class ColumnGenerationHelper {
             } else if (i > j) {
                 betaKey = "nrc_" + j + "_" + i + "_" + s;
             } else {
-                betaKey = null; // self-loop, shouldn't happen
+                betaKey = null;
             }
 
             if (betaKey != null && duals.containsKey(betaKey)) {
-                System.out.println("Y:");
+                System.out.println("Z:");
                 System.out.println("\tBetaKey: " + betaKey);
+                System.out.println("\tBeta value: " + duals.get(betaKey));
                 cost -= duals.get(betaKey);
             }
         }
 
         System.out.println("Modified cost: " + cost);
         return cost;
+
+        // Some extra information:
+//         3 type of constraints in master problem
+//         - Coupling   constraints: "matchOnce_i_j_s"
+//         - Convexity  constraints: "oneTourPerTeam_t"
+//         - NRC        constraints: "nrc_i_j_s"
     }
 }
