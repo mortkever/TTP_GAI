@@ -3,6 +3,7 @@ package Masterprobleem.columnGen;
 import Masterprobleem.Arc;
 import Masterprobleem.Tour;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ShortestPathGenerator {
@@ -11,9 +12,9 @@ public class ShortestPathGenerator {
     private static int timeSlots;
     private static int[] visits;
     private static int b;
-    private static int bestCost = Integer.MAX_VALUE;
+    private static int bestCost;
     private static int[][] costs;
-    private static List<Arc> bestArcs;
+    private static List<Arc> bestArcs = new ArrayList<>();
 
     public ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs) {
         ShortestPathGenerator.nTeams = nTeams;
@@ -23,9 +24,10 @@ public class ShortestPathGenerator {
         ShortestPathGenerator.costs = costs;
     }
 
-    private static boolean resourceExtentionFunction(int team, int time, int from, int to, int b) {
-        if (((visits[to] == 1 && to != team) || (visits[to] == 3 && to == team)) && time != 2 * (nTeams - 1))
+    private static boolean resourceExtentionFunction(int team, int time, int from, int to) {
+        if ((visits[to] > 0 && to != team) || (visits[to] > nTeams && to == team) && time != (2 * (nTeams - 1))) {
             return false;
+        }
         if (isArcB(team, time, from, to, nTeams)) {
             if (b + 1 >= upperbound) {
                 return false;
@@ -41,32 +43,38 @@ public class ShortestPathGenerator {
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
+        bestCost = Integer.MAX_VALUE;
+        b = 0;
+        bestArcs.clear();
         DFSrec(team, 0, team, 0);
 
-        System.err.println("Best cost" + bestCost);
+        System.err.println("Best cost: " + bestCost);
         return new Tour(bestArcs, bestCost);
     }
 
     private static boolean DFSrec(int team, int s, int from, int cost) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
-            if (resourceExtentionFunction(team, s, from, i, b)) {
-                if (s == timeSlots) {
+            if (resourceExtentionFunction(team, s, from, i)) {
+                if (s == timeSlots && i == team) {
                     if (cost + costs[from][i] < bestCost) {
                         bestCost = cost + costs[from][i];
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
-                        return true;
+                        tourFound = true;
                     }
                 } else {
+                    int visit_prev = visits[i];
+                    int b_prev = b;
                     visits[i]++;
                     if (cost + costs[from][i] >= bestCost)
                         continue;
-                    if (DFSrec(team, s + 1, from, cost + costs[from][i])) {
-                        bestArcs.add(new Arc(s, from, i));
+                    if (DFSrec(team, s + 1, i, cost + costs[from][i])) {
+                        bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
-                    visits[i]--;
+                    visits[i] = visit_prev;
+                    b = b_prev;
                 }
             }
         }
