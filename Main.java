@@ -1,12 +1,15 @@
 import com.gurobi.gurobi.*;
 
+import Masterprobleem.Tour;
+import Masterprobleem.columnGen.ShortestPathGenerator;
+
 public class Main {
     public static void main(String[] args) throws GRBException {
         int upperbound = 3;
         PrintHandler printHandler = new PrintHandler();
 
         // String fileName = "Data/NL4.xml";
-        String fileName = "Data/Distances/NL4_distances.txt";
+        String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         // ====================== Distance matrix =========================
@@ -16,6 +19,18 @@ public class Main {
         int timeSlots = 2 * (nTeams - 1) + 1;
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
+        //test mag weg
+        ShortestPathGenerator spg = new ShortestPathGenerator(nTeams, upperbound, timeSlots, distanceMatrix);
+        for(int i = 0; i< nTeams; i++){
+            Tour tour = ShortestPathGenerator.generateTour(i);
+            System.err.println(tour);
+        }
+        long total = 0;
+        for(int i =0; i< nTeams;i++){
+            total = ShortestPathGenerator.times[i] + total;
+        }
+        System.err.println("avg: " + total/nTeams);
+ 
         // ====================== Gurobi ============================
         System.out.println("======================== Gurobi ============================");
         // Set up model
@@ -72,7 +87,7 @@ public class Main {
         ScheduleValidator scheduleValidator = new ScheduleValidator(schedule, distanceMatrix);
         scheduleValidator.validate();
         // ================================================================
-
+ 
     }
 
     // ==================== Branch & Price ====================
