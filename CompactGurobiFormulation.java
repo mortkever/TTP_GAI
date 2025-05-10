@@ -164,7 +164,7 @@ public class CompactGurobiFormulation {
     }
 
     private boolean isArcB(int t, int s, int i, int j, int nTeams) {
-        boolean one = (t == i && t == j && s != 0 && s != 2 * (nTeams - 1));
+        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1) + 1));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
