@@ -20,14 +20,14 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         //test mag weg
-        ShortestPathGenerator spg = new ShortestPathGenerator(nTeams, upperbound, timeSlots, distanceMatrix);
+        ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, upperbound, timeSlots, distanceMatrix);
         for(int i = 0; i< nTeams; i++){
-            Tour tour = ShortestPathGenerator.generateTour(i);
+            Tour tour = spg.generateTour(i);
             System.err.println(tour);
         }
         long total = 0;
         for(int i =0; i< nTeams;i++){
-            total = ShortestPathGenerator.times[i] + total;
+            total = spg.times[i] + total;
         }
         System.err.println("avg: " + total/nTeams);
  

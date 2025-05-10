@@ -7,31 +7,58 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShortestPathGenerator {
-    private static int upperbound;
-    private static int nTeams;
-    private static int timeSlots;
-    private static int[] visits;
-    private static int b;
-    private static int bestCost;
-    private static int[][] costs;
-    private static List<Arc> bestArcs = new ArrayList<>();
-    public static long[] times;
+    private int upperbound;
+    private int nTeams;
+    private int timeSlots;
+    private int[] visits;
+    private int b;
+    private int bestCost;
+    private int[][] costs;
+    private List<Arc> bestArcs = new ArrayList<>();
+    public long[] times;
+    private static ShortestPathGenerator spg;
 
-    public ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs) {
-        ShortestPathGenerator.nTeams = nTeams;
-        ShortestPathGenerator.upperbound = upperbound;
-        ShortestPathGenerator.timeSlots = ts;
-        ShortestPathGenerator.visits = new int[nTeams];
-        ShortestPathGenerator.costs = costs;
+    private ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs) {
+        this.nTeams = nTeams;
+        this.upperbound = upperbound;
+        this.timeSlots = ts;
+        this.visits = new int[nTeams];
+        this.costs = costs;
         times = new long[nTeams];
     }
 
-    private static boolean resourceExtentionFunction(int team, int time, int from, int to) {
+    public static ShortestPathGenerator initializeSPG(int nTeams, int upperbound, int ts, int[][] costs) {
+        if (spg == null) {
+            spg = new ShortestPathGenerator(nTeams, upperbound, ts, costs);
+        } else {
+            spg.nTeams = nTeams;
+            spg.upperbound = upperbound;
+            spg.timeSlots = ts;
+            spg.visits = new int[nTeams];
+            spg.costs = costs;
+            spg.times = new long[nTeams];
+        }
+        return spg;
+    }
+
+    public static void updateCost(int[][] newCost) {
+        spg.costs = newCost;
+    }
+
+    public static ShortestPathGenerator getSPG() {
+        if (spg == null) {
+            System.err.println("Error generator is not initialized");
+            System.exit(-1);
+        }
+        return spg;
+    }
+
+    private boolean resourceExtentionFunction(int team, int time, int from, int to) {
         if ((visits[to] > 0 && to != team) || (visits[to] > nTeams && to == team) && time != (2 * (nTeams - 1))) {
             return false;
         }
         if (isArcB(team, time, from, to, nTeams)) {
-            if (b + 1 >= upperbound) {
+            if (b > upperbound - 2) {
                 return false;
             }
             b++;
@@ -41,7 +68,7 @@ public class ShortestPathGenerator {
         return true;
     }
 
-    public static Tour generateTour(int team) {
+    public Tour generateTour(int team) {
         long start = System.nanoTime();
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
@@ -55,9 +82,10 @@ public class ShortestPathGenerator {
         return new Tour(bestArcs, bestCost);
     }
 
-    private static boolean DFSrec(int team, int s, int from, int cost) {
+    private boolean DFSrec(int team, int s, int from, int cost) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
+            int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
                 if (s == timeSlots && i == team) {
                     if (cost + costs[from][i] < bestCost) {
@@ -67,18 +95,18 @@ public class ShortestPathGenerator {
                         return true;
                     }
                 } else {
-                    int b_prev = b;
                     visits[i]++;
+                    boolean pruneCost = false;
                     if (cost + costs[from][i] >= bestCost)
-                        continue;
-                    if (DFSrec(team, s + 1, i, cost + costs[from][i])) {
+                        pruneCost = true;
+                    if (DFSrec(team, s + 1, i, cost + costs[from][i]) && !pruneCost) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
                     visits[i]--;
-                    b = b_prev;
                 }
             }
+            b = b_prev;
         }
         return tourFound;
     }
