@@ -54,11 +54,11 @@ public class ShortestPathGenerator {
     }
 
     private boolean resourceExtentionFunction(int team, int time, int from, int to) {
-        if ((visits[to] > 0 && to != team) || (visits[to] > nTeams && to == team) && time != (2 * (nTeams - 1))) {
+        if ((visits[to] > 0 && to != team) || (visits[to] >= nTeams && to == team) && time != (2 * (nTeams - 1) + 1)) {
             return false;
         }
         if (isArcB(team, time, from, to, nTeams)) {
-            if (b > upperbound - 2) {
+            if (b >= upperbound) {
                 return false;
             }
             b++;
@@ -87,9 +87,10 @@ public class ShortestPathGenerator {
         for (int i = 0; i < nTeams; i++) {
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
-                if (s == timeSlots && i == team) {
+                if (s == timeSlots - 1 && i == team) {
                     if (cost + costs[from][i] < bestCost) {
                         bestCost = cost + costs[from][i];
+                        System.err.println("d: " + b);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
                         return true;
@@ -99,7 +100,7 @@ public class ShortestPathGenerator {
                     boolean pruneCost = false;
                     if (cost + costs[from][i] >= bestCost)
                         pruneCost = true;
-                    if (DFSrec(team, s + 1, i, cost + costs[from][i]) && !pruneCost) {
+                    if (!pruneCost && DFSrec(team, s + 1, i, cost + costs[from][i])) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
@@ -119,7 +120,7 @@ public class ShortestPathGenerator {
     }
 
     private static boolean isArcB(int t, int s, int i, int j, int nTeams) {
-        boolean one = (t == i && t == j && s != 0 && s != 2 * (nTeams - 1));
+        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1) + 1));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
