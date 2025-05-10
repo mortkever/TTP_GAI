@@ -15,6 +15,7 @@ public class ShortestPathGenerator {
     private static int bestCost;
     private static int[][] costs;
     private static List<Arc> bestArcs = new ArrayList<>();
+    public static long[] times;
 
     public ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs) {
         ShortestPathGenerator.nTeams = nTeams;
@@ -22,6 +23,7 @@ public class ShortestPathGenerator {
         ShortestPathGenerator.timeSlots = ts;
         ShortestPathGenerator.visits = new int[nTeams];
         ShortestPathGenerator.costs = costs;
+        times = new long[nTeams];
     }
 
     private static boolean resourceExtentionFunction(int team, int time, int from, int to) {
@@ -40,15 +42,16 @@ public class ShortestPathGenerator {
     }
 
     public static Tour generateTour(int team) {
+        long start = System.nanoTime();
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
         bestCost = Integer.MAX_VALUE;
         b = 0;
-        bestArcs.clear();
+        bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0);
-
-        System.err.println("Best cost: " + bestCost);
+        times[team] = (System.nanoTime() - start) / 1000;
+        System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
         return new Tour(bestArcs, bestCost);
     }
 
@@ -61,10 +64,9 @@ public class ShortestPathGenerator {
                         bestCost = cost + costs[from][i];
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
-                        tourFound = true;
+                        return true;
                     }
                 } else {
-                    int visit_prev = visits[i];
                     int b_prev = b;
                     visits[i]++;
                     if (cost + costs[from][i] >= bestCost)
@@ -73,7 +75,7 @@ public class ShortestPathGenerator {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
-                    visits[i] = visit_prev;
+                    visits[i]--;
                     b = b_prev;
                 }
             }
