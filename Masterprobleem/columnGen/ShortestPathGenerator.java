@@ -90,7 +90,6 @@ public class ShortestPathGenerator {
                 if (s == timeSlots - 1 && i == team) {
                     if (cost + costs[from][i] < bestCost) {
                         bestCost = cost + costs[from][i];
-                        System.err.println("d: " + b);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
                         return true;
