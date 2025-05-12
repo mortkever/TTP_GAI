@@ -9,15 +9,15 @@ public class Main {
         int upperbound = 3;
         PrintHandler printHandler = new PrintHandler();
 
-        // String fileName = "Data/NL4.xml";
-        String fileName = "Data/Distances/NL6_distances.txt";
+        String fileName = "Data/NL4_1tjes.xml";
+        //String fileName = "Data/Distances/NL4_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         // ====================== Distance matrix =========================
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * (nTeams - 1);
+        int timeSlots = 2 * (nTeams - 1) + 1;
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         //test mag weg
@@ -66,6 +66,18 @@ public class Main {
         CompactModel firstSolution_compact = new CompactModel(nTeams,timeSlots,distanceMatrix);
         firstSolution_compact.getFirstSolution();
         GRBVar[][][][] x = firstSolution_compact.getFirstSolution();
+
+        for(int t = 0; t < nTeams; t++) {;
+            for (int s = 0; s < timeSlots; s++) {
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+                            System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+                        }
+                    }
+                }
+            }
+        }
 
         OutputHandeler oh = new OutputHandeler();
         try {
