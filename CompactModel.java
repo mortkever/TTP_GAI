@@ -1,20 +1,11 @@
-package Masterprobleem;
+import com.gurobi.gurobi.*;
 
-import com.gurobi.gurobi.GRB;
-import com.gurobi.gurobi.GRBEnv;
-import com.gurobi.gurobi.GRBException;
-import com.gurobi.gurobi.GRBLinExpr;
-import com.gurobi.gurobi.GRBModel;
-import com.gurobi.gurobi.GRBVar;
-
-public class FirstSolution {
+public class CompactModel {
     private GRBVar x[][][][];
     private GRBModel model;
 
-    public FirstSolution(int nTeams, int timeSlots, int[][] distanceMatrix) throws GRBException {
+    public CompactModel(int nTeams, int timeSlots, int[][] distanceMatrix) throws GRBException {
         this.model = new GRBModel(new GRBEnv());
-        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        model.set(GRB.IntParam.SolutionLimit, 1);
 
         int upperbound = 3;
 
@@ -127,6 +118,11 @@ public class FirstSolution {
                 }
             }
         }
+    }
+
+    public void optimize() throws GRBException {
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+        model.set(GRB.IntParam.SolutionLimit, 1);
 
         model.optimize();
     }
@@ -152,3 +148,4 @@ public class FirstSolution {
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 }
+

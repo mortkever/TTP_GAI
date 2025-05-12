@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL6_distances.txt";
+        String fileName = "Data/Distances/NL4_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
@@ -121,21 +121,21 @@ public class Main {
             // Enkel op het einde 1x oplossen
             master.optimize();
 
-            //// Relax to LP for dual prices
-            //System.out.println("\n\nRelaxing the model...");
-            //GRBModel relaxed = master.getModel().relax();
-            //relaxed.optimize();
-//
-            //// Extract dual prices
-            //ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
-            //relaxedModel.extractDuals();
-            //Map<String, Double> dualPrices = relaxedModel.getDualPrices();
-            //relaxedModel.printDuals();
-//
-            //// test to get modified cost
-            //// arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            //double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
-            //System.out.println("\nMain:\n\tModified cost: " + test_cost);
+            // Relax to LP for dual prices
+            System.out.println("\n\nRelaxing the model...");
+            GRBModel relaxed = master.getModel().relax();
+            relaxed.optimize();
+
+            // Extract dual prices
+            ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper(relaxed);
+            relaxedModel_helper.extractDuals();
+            Map<String, Double> dualPrices = relaxedModel_helper.getDualPrices();
+            relaxedModel_helper.printDuals();
+
+            // test to get modified cost
+            // arguments: t, i, j, s, duals, distanceMatrix, numTeams
+            double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, distanceMatrix.length);
+            System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
             // ====================== FINAL SOLUTION (IP) =========================
             // Get the integer model's solution

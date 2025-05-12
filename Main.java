@@ -1,3 +1,4 @@
+import Masterprobleem.FirstSolution;
 import com.gurobi.gurobi.*;
 
 import Masterprobleem.Tour;
@@ -34,36 +35,41 @@ public class Main {
         // ====================== Gurobi ============================
         System.out.println("======================== Gurobi ============================");
         // Set up model
-        GRBEnv env = new GRBEnv();
-        CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
+        //GRBEnv env = new GRBEnv();
+        //CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
+//
+        //// Solve
+        //GRBModel model = compact.getModel();
+        //model.set(GRB.IntParam.SolutionLimit, 1);
+        //model.optimize();
 
-        // Solve
-        GRBModel model = compact.getModel();
-        model.optimize();
+        //// Output
+        //GRBVar[][][][] x = compact.getX();
+        //if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
+        //    System.out.println("oplossing gevonden");
+        //    System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
+        //    for (int t = 0; t < nTeams; t++) {
+        //        for (int s = 0; s < timeSlots; s++) {
+        //            for (int i = 0; i < nTeams; i++) {
+        //                for (int j = 0; j < nTeams; j++) {
+        //                    if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+        //                        System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //} else {
+        //    System.out.println("geen oplossing gevonden.");
+        //}
 
-        // Output
-        GRBVar[][][][] x = compact.getX();
-        if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
-            System.out.println("oplossing gevonden");
-            System.out.println("Objective value total Distance: " + model.get(GRB.DoubleAttr.ObjVal));
-            for (int t = 0; t < nTeams; t++) {
-                for (int s = 0; s < timeSlots; s++) {
-                    for (int i = 0; i < nTeams; i++) {
-                        for (int j = 0; j < nTeams; j++) {
-                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
-                                System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            System.out.println("geen oplossing gevonden.");
-        }
+        CompactModel firstSolution_compact = new CompactModel(nTeams,timeSlots,distanceMatrix);
+        firstSolution_compact.getFirstSolution();
+        GRBVar[][][][] x = firstSolution_compact.getFirstSolution();
 
         OutputHandeler oh = new OutputHandeler();
         try {
-            oh.output(x, nTeams, timeSlots, model.get(GRB.DoubleAttr.ObjVal));
+            oh.output(x, nTeams, timeSlots, firstSolution_compact.getModel().get(GRB.DoubleAttr.ObjVal));
         } catch (Exception e) {
             e.printStackTrace();
         }
