@@ -77,7 +77,7 @@ public class CompactModel {
             for (int i = 0; i < nTeams; i++) {
                 if (i != t) {
                     GRBLinExpr expr = new GRBLinExpr();
-                    for (int s = 1; s < timeSlots; s++) {
+                    for (int s = 1; s < timeSlots + 1; s++) {
                         for (int j = 0; j < nTeams; j++) {
                             if (isArcA(t, s, i, j, nTeams))
                                 expr.addTerm(1.0, x[t][s][i][j]);
@@ -128,7 +128,7 @@ public class CompactModel {
 
     public GRBVar[][][][] getFirstSolution() throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        model.set(GRB.IntParam.SolutionLimit, 1);
+        //model.set(GRB.IntParam.SolutionLimit, 1);
 
         model.optimize();
 
@@ -152,4 +152,3 @@ public class CompactModel {
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 }
-
