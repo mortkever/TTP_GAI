@@ -58,7 +58,7 @@ public class ShortestPathGenerator {
             return false;
         }
         if (isArcB(team, time, from, to, nTeams)) {
-            if (b >= upperbound) {
+            if (b >= upperbound-1) {
                 return false;
             }
             b++;
@@ -85,6 +85,8 @@ public class ShortestPathGenerator {
     private boolean DFSrec(int team, int s, int from, int cost) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
+            if (cost + costs[from][i] >= bestCost || (s == timeSlots && i != team))
+                continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
                 if (s == timeSlots - 1 && i == team) {
@@ -96,10 +98,7 @@ public class ShortestPathGenerator {
                     }
                 } else {
                     visits[i]++;
-                    boolean pruneCost = false;
-                    if (cost + costs[from][i] >= bestCost)
-                        pruneCost = true;
-                    if (!pruneCost && DFSrec(team, s + 1, i, cost + costs[from][i])) {
+                    if (DFSrec(team, s + 1, i, cost + costs[from][i])) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
