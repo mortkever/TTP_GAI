@@ -1,14 +1,13 @@
 package Masterprobleem;
-
 import com.gurobi.gurobi.*;
-
 import java.util.*;
+
 
 public class Main {
     public static void main(String[] args) throws Exception {
 
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL4_distances.txt";
+        String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
@@ -23,44 +22,52 @@ public class Main {
 
 
         // ====================== Compacte Formulering =========================
-        System.out.println("///////////////////////////////////////////////////////////////////////////////////////////");
-        System.out.println("Compacte formulering solutie");
+        boolean DO_COMPACTE_FORMULERING = false;
 
-        int upperbound = 3;  // of een redelijke schatting
-        GRBEnv env = new GRBEnv();
-        CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
-        GRBModel model = compact.getModel();
-        model.optimize();
+        if (DO_COMPACTE_FORMULERING) {
+            System.out.println("///////////////////////////////////////////////////////////////////////////////////////////");
+            System.out.println("Compacte formulering solutie");
 
-        FirstSolution firstSolution = new FirstSolution(nTeams,timeSlots,distanceMatrix);
-        firstSolution.getFirstSolution();
-        GRBVar[][][][] x = firstSolution.getFirstSolution();
+            int upperbound = 3;  // of een redelijke schatting
+            GRBEnv env = new GRBEnv();
+            CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
+            GRBModel model = compact.getModel();
+            model.optimize();
 
-        //GRBVar[][][][] x = compact.getX();
+            FirstSolution firstSolution_compact = new FirstSolution(nTeams,timeSlots,distanceMatrix);
+            firstSolution_compact.getFirstSolution();
+            GRBVar[][][][] x = firstSolution_compact.getFirstSolution();
 
-        if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
-            System.out.println("Oplossing gevonden");
-            System.out.println("Totale afstand: " + model.get(GRB.DoubleAttr.ObjVal));
-            for (int t = 0; t < nTeams; t++) {
-                for (int s = 0; s < timeSlots; s++) {
-                    for (int i = 0; i < nTeams; i++) {
-                        for (int j = 0; j < nTeams; j++) {
-                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
-                                System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+            //GRBVar[][][][] x = compact.getX();
+
+            if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
+                System.out.println("Oplossing gevonden");
+                System.out.println("Totale afstand: " + model.get(GRB.DoubleAttr.ObjVal));
+                for (int t = 0; t < nTeams; t++) {
+                    for (int s = 0; s < timeSlots; s++) {
+                        for (int i = 0; i < nTeams; i++) {
+                            for (int j = 0; j < nTeams; j++) {
+                                if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+                                    System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            OutputHandeler oh = new OutputHandeler();
-            oh.output(x, nTeams, timeSlots, model.get(GRB.DoubleAttr.ObjVal));
-        } else {
-            System.out.println("Geen oplossing gevonden.");
+                OutputHandeler oh = new OutputHandeler();
+                oh.output(x, nTeams, timeSlots, model.get(GRB.DoubleAttr.ObjVal));
+            } else {
+                System.out.println("Geen oplossing gevonden.");
+            }
         }
 
         // ====================== Initieel vullen van MasterProblem =========================
         Masterproblem master = new Masterproblem(new TourRepository(nTeams));
+
+        FirstSolution firstSolution = new FirstSolution(nTeams,timeSlots,distanceMatrix);
+        firstSolution.getFirstSolution();
+        GRBVar[][][][] x = firstSolution.getFirstSolution();
 
         for (int t = 0; t < nTeams; t++) {
             List<Arc> arcs = new ArrayList<>();
@@ -107,37 +114,44 @@ public class Main {
 
         try {
             // ====================== MasterProblem oplossen =========================
+            System.out.println("\n\n\nOplossen van het masterprobleem...");
             master.buildConstraints();
+            //GRBModel model = master.getModel();
+
+            // Enkel op het einde 1x oplossen
             master.optimize();
 
-            // Relax to LP for dual prices
-            GRBModel relaxed = master.getModel().relax();
-            relaxed.optimize();
+            //// Relax to LP for dual prices
+            //System.out.println("\n\nRelaxing the model...");
+            //GRBModel relaxed = master.getModel().relax();
+            //relaxed.optimize();
+//
+            //// Extract dual prices
+            //ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
+            //relaxedModel.extractDuals();
+            //Map<String, Double> dualPrices = relaxedModel.getDualPrices();
+            //relaxedModel.printDuals();
+//
+            //// test to get modified cost
+            //// arguments: t, i, j, s, duals, distanceMatrix, numTeams
+            //double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
+            //System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
-            // Extract dual prices
-            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
-            relaxedModel.extractDuals();
-            Map<String, Double> dualPrices = relaxedModel.getDualPrices();
-            relaxedModel.printDuals();
-
-            // test to get modified cost
-            // arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
-            System.out.println("\nMain:\n\tModified cost: " + test_cost);
-
+            // ====================== FINAL SOLUTION (IP) =========================
             // Get the integer model's solution
-            Map<Integer, Tour> finalSolution = master.getSolution();
-
-            System.out.println("------------ Geselecteerde tours in masteroplossing -------------");
-
-            for (Map.Entry<Integer, Tour> entry : finalSolution.entrySet()) {
-                int team = entry.getKey();
-                Tour tour = entry.getValue();
-                System.out.println("Team " + team + " (Totale kost: " + tour.cost + "):");
-                for (Arc arc : tour.arcs) {
-                    System.out.println("    Tijd " + arc.time + ": " + arc.from + " → " + arc.to);
-                }
-            }
+//            master.optimize();
+//            Map<Integer, Tour> finalSolution = master.getSolution();
+//
+//            System.out.println("------------ Geselecteerde tours in masteroplossing -------------");
+//
+//            for (Map.Entry<Integer, Tour> entry : finalSolution.entrySet()) {
+//                int team = entry.getKey();
+//                Tour tour = entry.getValue();
+//                System.out.println("Team " + team + " (Totale kost: " + tour.cost + "):");
+//                for (Arc arc : tour.arcs) {
+//                    System.out.println("    Tijd " + arc.time + ": " + arc.from + " → " + arc.to);
+//                }
+//            }
 
         } catch (GRBException e) {
             e.printStackTrace();

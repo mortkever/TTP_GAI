@@ -18,8 +18,6 @@ public class Masterproblem {
         this.tourRepo = tourRepo;
     }
 
-
-
     public void addTour(int team, Tour tour) {
         tourRepo.addTour(team, tour);
     }
@@ -117,6 +115,8 @@ public class Masterproblem {
                 }
             }
         }
+
+        model.update();
     }
 
     public void optimize() {

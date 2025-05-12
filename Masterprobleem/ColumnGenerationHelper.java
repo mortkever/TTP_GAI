@@ -69,10 +69,10 @@ public class ColumnGenerationHelper {
     }
 
     public double computeModifiedCost(
-            int t,
-            int i,                 // from
-            int j,                 // to
-            int s,                 // time slot index
+            int t,                  // team
+            int i,                  // from
+            int j,                  // to
+            int s,                  // time slot index
             Map<String, Double> duals,
             int[][] distanceMatrix,
             int numTeams
