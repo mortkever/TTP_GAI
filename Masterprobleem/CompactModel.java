@@ -1,3 +1,5 @@
+package Masterprobleem;
+
 import com.gurobi.gurobi.*;
 
 public class CompactModel {
@@ -128,7 +130,7 @@ public class CompactModel {
 
     public GRBVar[][][][] getFirstSolution() throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        //model.set(GRB.IntParam.SolutionLimit, 1);
+        model.set(GRB.IntParam.SolutionLimit, 1);
 
         model.optimize();
 

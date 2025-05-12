@@ -7,13 +7,13 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL4_distances.txt";
+        String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * (nTeams - 1) + 1;
+        int timeSlots = 2 * (nTeams - 1);
 
         PrintHandler printHandler = new PrintHandler();
         printHandler.printDistanceMatrixContents(distanceMatrix);
@@ -65,9 +65,9 @@ public class Main {
         // ====================== Initieel vullen van MasterProblem =========================
         Masterproblem master = new Masterproblem(new TourRepository(nTeams));
 
-        FirstSolution firstSolution = new FirstSolution(nTeams,timeSlots,distanceMatrix);
-        firstSolution.getFirstSolution();
-        GRBVar[][][][] x = firstSolution.getFirstSolution();
+        CompactModel compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
+        compactModel.getFirstSolution();
+        GRBVar[][][][] x = compactModel.getFirstSolution();
 
         for (int t = 0; t < nTeams; t++) {
             List<Arc> arcs = new ArrayList<>();
