@@ -45,7 +45,7 @@ public class CompactModel {
         // Constraint 5 : force every team to play every time slot
 
         for (int t = 0; t < nTeams; t++) { // For each team
-            for (int s = 1; s < timeSlots; s++) { // For each timeslot
+            for (int s = 1; s < timeSlots + 1; s++) { // For each timeslot
                 GRBLinExpr constraint = new GRBLinExpr();
 
                 // First summation: Flow from i to j at time t
@@ -77,7 +77,7 @@ public class CompactModel {
             for (int i = 0; i < nTeams; i++) {
                 if (i != t) {
                     GRBLinExpr expr = new GRBLinExpr();
-                    for (int s = 1; s < timeSlots; s++) {
+                    for (int s = 1; s < timeSlots + 1; s++) {
                         for (int j = 0; j < nTeams; j++) {
                             if (isArcA(t, s, i, j, nTeams))
                                 expr.addTerm(1.0, x[t][s][i][j]);
@@ -128,7 +128,7 @@ public class CompactModel {
 
     public GRBVar[][][][] getFirstSolution() throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        model.set(GRB.IntParam.SolutionLimit, 1);
+        //model.set(GRB.IntParam.SolutionLimit, 1);
 
         model.optimize();
 
@@ -141,15 +141,14 @@ public class CompactModel {
 
     public static boolean isArcA(int t, int s, int i, int j, int nTeams) {
         boolean one = (t == i && s == 0);
-        boolean two = (j == t && s == (2 * (nTeams - 1) + 1));
-        boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1) + 1) && s != 0;
+        boolean two = (j == t && s == (2 * (nTeams - 1)));
+        boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1)) && s != 0;
         return one || two || three;
     }
 
     public static boolean isArcB(int t, int s, int i, int j, int nTeams) {
-        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1) + 1));
+        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1)));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 }
-
