@@ -1,7 +1,8 @@
 package Dummy_Test;
 
-import Masterprobleem.ColumnGenerationHelper;
 import Masterprobleem.InputHandler;
+import Masterprobleem.columnGen.ColumnGenerationHelper;
+
 import com.gurobi.gurobi.*;
 import java.util.*;
 

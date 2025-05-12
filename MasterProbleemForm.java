@@ -1,5 +1,7 @@
-import Masterprobleem.ColumnGenerationHelper;
 import com.gurobi.gurobi.*;
+
+import Masterprobleem.columnGen.ColumnGenerationHelper;
+
 import java.util.*;
 
 public class MasterProbleemForm {

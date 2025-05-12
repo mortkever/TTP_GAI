@@ -1,4 +1,4 @@
-package Masterprobleem;
+package Masterprobleem.columnGen;
 
 import com.gurobi.gurobi.*;
 import java.util.HashMap;
@@ -73,7 +73,6 @@ public class ColumnGenerationHelper {
             int i,                  // from
             int j,                  // to
             int s,                  // time slot index
-            Map<String, Double> duals,
             int[][] distanceMatrix,
             int numTeams
     ) {
@@ -93,8 +92,8 @@ public class ColumnGenerationHelper {
                 String pi_ts_key = "matchOnce_" + t + "_" + opp + "_" + s;
                 String pi_is_key = "matchOnce_" + i + "_" + opp + "_" + s;
 
-                pi_ts += duals.getOrDefault(pi_ts_key, 0.0);
-                pi_is += duals.getOrDefault(pi_is_key, 0.0);
+                pi_ts += dualPrices.getOrDefault(pi_ts_key, 0.0);
+                pi_is += dualPrices.getOrDefault(pi_is_key, 0.0);
             }
 
             System.out.println("Y:");
@@ -116,11 +115,11 @@ public class ColumnGenerationHelper {
                 betaKey = null;
             }
 
-            if (betaKey != null && duals.containsKey(betaKey)) {
+            if (betaKey != null && dualPrices.containsKey(betaKey)) {
                 System.out.println("Z:");
                 System.out.println("\tBetaKey: " + betaKey);
-                System.out.println("\tBeta value: " + duals.get(betaKey));
-                cost -= duals.get(betaKey);
+                System.out.println("\tBeta value: " + dualPrices.get(betaKey));
+                cost -= dualPrices.get(betaKey);
             }
         }
 

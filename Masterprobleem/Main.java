@@ -1,5 +1,8 @@
 package Masterprobleem;
 import com.gurobi.gurobi.*;
+
+import Masterprobleem.columnGen.ColumnGenerationHelper;
+
 import java.util.*;
 
 
@@ -134,7 +137,7 @@ public class Main {
 
             // test to get modified cost
             // arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, distanceMatrix.length);
+            double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, distanceMatrix, distanceMatrix.length);
             System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
             // ====================== FINAL SOLUTION (IP) =========================
