@@ -122,12 +122,16 @@ public class CompactModel {
 
     public void optimize() throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        model.set(GRB.IntParam.SolutionLimit, 1);
 
         model.optimize();
     }
 
-    public GRBVar[][][][] getFirstSolution() {
+    public GRBVar[][][][] getFirstSolution() throws GRBException {
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+        model.set(GRB.IntParam.SolutionLimit, 1);
+
+        model.optimize();
+
         return x;
     }
 

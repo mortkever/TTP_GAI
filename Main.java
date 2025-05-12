@@ -17,7 +17,7 @@ public class Main {
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * (nTeams - 1) + 1;
+        int timeSlots = 2 * (nTeams - 1);
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         //test mag weg
@@ -74,6 +74,7 @@ public class Main {
             e.printStackTrace();
         }
 
+        // output inlezen
         Schedule schedule = Schedule.loadScheduleFromXML("output.xml");
         // Schedule schedule =
         // Schedule.loadScheduleFromXML("Data/Solutions/NL16_Best_Solution_Broken.xml");
