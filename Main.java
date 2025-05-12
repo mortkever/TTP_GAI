@@ -9,7 +9,7 @@ public class Main {
         int upperbound = 3;
         PrintHandler printHandler = new PrintHandler();
 
-        String fileName = "Data/NL4_1tjes.xml";
+        String fileName = "Data/NL6.xml";
         //String fileName = "Data/Distances/NL4_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
@@ -17,7 +17,7 @@ public class Main {
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
-        int timeSlots = 2 * (nTeams - 1) + 1;
+        int timeSlots = 2 * (nTeams - 1);
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         //test mag weg
@@ -63,7 +63,7 @@ public class Main {
         //    System.out.println("geen oplossing gevonden.");
         //}
 
-        CompactModel firstSolution_compact = new CompactModel(nTeams,timeSlots,distanceMatrix);
+        Masterprobleem.CompactModel firstSolution_compact = new Masterprobleem.CompactModel(nTeams,timeSlots,distanceMatrix);
         firstSolution_compact.getFirstSolution();
         GRBVar[][][][] x = firstSolution_compact.getFirstSolution();
 
