@@ -10,6 +10,7 @@ public class ColumnGenerationHelper {
 
     // Stores dual prices
     private Map<String, Double> dualPrices;
+    private double[][][][] modCostCache;
 
     public ColumnGenerationHelper(GRBModel model) throws GRBException {
         // Check if the model is valid
@@ -46,7 +47,8 @@ public class ColumnGenerationHelper {
             for (GRBConstr constr : masterModel.getConstrs()) {
                 String constrName = constr.get(GRB.StringAttr.ConstrName);
                 double dual = constr.get(GRB.DoubleAttr.Pi); // Pi = dual value
-                //System.out.println("\n\nConstraint: " + constrName + ", Dual Price: " + dual);
+                // System.out.println("\n\nConstraint: " + constrName + ", Dual Price: " +
+                // dual);
                 dualPrices.put(constrName, dual);
             }
         } catch (GRBException e) {
@@ -61,11 +63,24 @@ public class ColumnGenerationHelper {
     }
 
     public Map<String, Double> getDualPrices() {
-        if(this.dualPrices.isEmpty()) {
+        if (this.dualPrices.isEmpty()) {
             extractDuals();
         }
 
         return dualPrices;
+    }
+
+    public void resetCache(int nTeams, int timeSlots) {
+        modCostCache = new double[nTeams][timeSlots + 1][nTeams][nTeams];
+        for (int t = 0; t < nTeams; t++) {
+            for (int s = 0; s < timeSlots + 1; s++) {
+                for (int i = 0; i < nTeams; i++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        modCostCache[t][s][i][j] = Double.MAX_VALUE;
+                    }
+                }
+            }
+        }
     }
 
     public double computeModifiedCost(
@@ -76,12 +91,15 @@ public class ColumnGenerationHelper {
             int[][] distanceMatrix,
             int numTeams
     ) {
+        if(modCostCache[t][s][i][j] != Double.MAX_VALUE){
+            return modCostCache[t][s][i][j];
+        }
         // It will be calculated as c = X - Y - Z for readability
-        System.out.println("\nModified costs:");
+        //System.out.println("\nModified costs:");
 
         // X: base travel distance
         double cost = distanceMatrix[i][j];
-        System.out.println("Default cost: " + cost);
+        //System.out.println("Default cost: " + cost);
 
         // Y: subtract π_(ts) + π_(is) if i ≠ t (i.e., this is an away game)
         if (i != t) {
@@ -96,9 +114,9 @@ public class ColumnGenerationHelper {
                 pi_is += dualPrices.getOrDefault(pi_is_key, 0.0);
             }
 
-            System.out.println("Y:");
-            System.out.println("\tpi_ts sum: " + pi_ts);
-            System.out.println("\tpi_is sum: " + pi_is);
+            //System.out.println("Y:");
+            //System.out.println("\tpi_ts sum: " + pi_ts);
+            //System.out.println("\tpi_is sum: " + pi_is);
 
             cost -= (pi_ts + pi_is);
         }
@@ -116,14 +134,15 @@ public class ColumnGenerationHelper {
             }
 
             if (betaKey != null && dualPrices.containsKey(betaKey)) {
-                System.out.println("Z:");
-                System.out.println("\tBetaKey: " + betaKey);
-                System.out.println("\tBeta value: " + dualPrices.get(betaKey));
+                //System.out.println("Z:");
+                //System.out.println("\tBetaKey: " + betaKey);
+                //System.out.println("\tBeta value: " + dualPrices.get(betaKey));
                 cost -= dualPrices.get(betaKey);
             }
         }
 
-        System.out.println("Modified cost: " + cost);
+        //System.out.println("Modified cost: " + cost);
+        modCostCache[t][s][i][j] = cost;
         return cost;
 
         // Some extra information:
