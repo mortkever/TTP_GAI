@@ -11,11 +11,15 @@ public class Masterproblem {
     private final TourRepository tourRepo;
     private GRBEnv env;
     private GRBModel model;
-    private Map<Integer, List<GRBVar>> lambdaVars;
+    private GRBModel relaxedModel;
+//    private Map<Integer, List<GRBVar>> lambdaVars;
+    private Map<Integer, HashMap<Tour, GRBVar>> lambdaVars;
     private Map<String, List<int[]>> arcIndex;
+    private int[][] distanceMatrix;
 
-    public Masterproblem(TourRepository tourRepo) {
+    public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) {
         this.tourRepo = tourRepo;
+        this.distanceMatrix = distanceMatrix;
     }
 
     public void addTour(int team, Tour tour) {
@@ -38,13 +42,14 @@ public class Masterproblem {
         // 1. Maak lambda-variabelen
         for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
             int team = entry.getKey();
-            List<GRBVar> teamVars = new ArrayList<>();
+            HashMap<Tour, GRBVar> teamVars = new HashMap<>();
             List<Tour> teamTours = entry.getValue();
 
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
+                System.out.println("\n\nTour cost: " + tour.cost);
                 GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
-                teamVars.add(var);
+                teamVars.put(tour, var);
 
                 // Arc-index vullen voor latere constraints
                 for (Arc arc : tour.arcs) {
@@ -57,60 +62,77 @@ public class Masterproblem {
         }
 
         // 2. Convexiteitsrestrictie/convexity (10): één tour per team
-        for (Map.Entry<Integer, List<GRBVar>> entry : lambdaVars.entrySet()) {
+        for (Map.Entry<Integer, HashMap<Tour, GRBVar>> entry : lambdaVars.entrySet()) {
             GRBLinExpr expr = new GRBLinExpr();
-            for (GRBVar var : entry.getValue()) {
+            for (GRBVar var : entry.getValue().values()) {
                 expr.addTerm(1.0, var);
             }
             model.addConstr(expr, GRB.EQUAL, 1.0, "oneTourPerTeam_" + entry.getKey());
         }
 
-        // 3. Synchronisatieconstraint/coupling (9): elk arc precies één keer
-        for (Map.Entry<String, List<int[]>> arcEntry : arcIndex.entrySet()) {
-            GRBLinExpr expr = new GRBLinExpr();
-            for (int[] tp : arcEntry.getValue()) {
-                GRBVar lambda = lambdaVars.get(tp[0]).get(tp[1]);
-                expr.addTerm(1.0, lambda);
+        // 3. coupling (9): teams om zelfde moment op zelfde locatie (voor een match)
+        // For all loops
+        for (int t = 0; t < numTeams; t++) {
+            for (int s = 0; s < numSlots; s++) {
+                GRBLinExpr expr = new GRBLinExpr();
+                String key = s + "_" + t;
+
+                // Somatie loops 1
+                // j = t'
+                for (int j = 0; j < numTeams; j++) {
+                    if (j != t) {
+                        for (Tour tour : allTours.get(t)) {
+                            if (couplingArcExist(tour, j, s)) {  // met j=t'
+                                expr.addTerm(1.0, lambdaVars.get(t).get(tour));
+                            }
+                        }
+                    }
+                }
+
+                // Somatie loops 1
+                for (int j = 0; j < numTeams; j++) {
+                    if (j != t) {
+                        for (Tour tour : allTours.get(j)) {
+                            if (couplingArcExist(tour, t, s)) {
+                                expr.addTerm(1.0, lambdaVars.get(j).get(tour));
+                            }
+                        }
+                    }
+                }
+
+                System.out.println("\n\n Constraint added, key: " + key);
+                model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
-            model.addConstr(expr, GRB.EQUAL, 1.0, "matchOnce_" + arcEntry.getKey());
         }
 
-         //Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
+        //Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
+        // for all loop
         for (int t = 0; t < numTeams; t++) {
-            for (int tPrime = t + 1; tPrime < numTeams; tPrime++) {
-                for (int s = 0; s < numSlots - 1; s++) {
-
-                    // Arc (t, t', s) en (t', t, s) in tours van team t
-                    String arc1_tt_s = s + "_" + t + "_" + tPrime;
-                    String arc2_tprime_t_s = s + "_" + tPrime + "_" + t;
-
-                    // Arc (t, t', s+1) en (t', t, s+1) in tours van team t'
-                    String arc3_tt_s1 = (s + 1) + "_" + t + "_" + tPrime;
-                    String arc4_tprime_t_s1 = (s + 1) + "_" + tPrime + "_" + t;
-
-                    List<int[]> pt1 = arcIndex.getOrDefault(arc1_tt_s, new ArrayList<>());
-                    List<int[]> pt2 = arcIndex.getOrDefault(arc2_tprime_t_s, new ArrayList<>());
-                    List<int[]> pt3 = arcIndex.getOrDefault(arc3_tt_s1, new ArrayList<>());
-                    List<int[]> pt4 = arcIndex.getOrDefault(arc4_tprime_t_s1, new ArrayList<>());
-
-                    if ((!pt1.isEmpty() || !pt2.isEmpty()) && (!pt3.isEmpty() || !pt4.isEmpty())) {
+            for (int j = 0; j < numTeams; j++) {
+                if (t < j) {
+                    for (int s = 0; s < numSlots; s++) {
                         GRBLinExpr expr = new GRBLinExpr();
+                        String key = s + "_" + t + "_" + j;
 
-                        for (int[] tp : pt1) {
-                            if (tp[0] == t) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
-                        }
-                        for (int[] tp : pt2) {
-                            if (tp[0] == t) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
-                        }
-                        for (int[] tp : pt3) {
-                            if (tp[0] == tPrime) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
-                        }
-                        for (int[] tp : pt4) {
-                            if (tp[0] == tPrime) expr.addTerm(1.0, lambdaVars.get(tp[0]).get(tp[1]));
+                        // Somatie loop 1
+                        for (Tour tour : allTours.get(t)) {
+                            if (NRCArcExist(tour, t, j, s)) {
+                                System.out.println("Sommatie 1");
+                                expr.addTerm(1.0, lambdaVars.get(t).get(tour));
+                            }
                         }
 
-                        model.addConstr(expr, GRB.LESS_EQUAL, 1.0,
-                                "nrc_" + t + "_" + tPrime + "_" + s);
+                        // Somatie loop 2
+                        for (Tour tour : allTours.get(j)) {
+                            if (NRCArcExist(tour, j, t, s)) {
+                                System.out.println("Sommatie 2");
+                                expr.addTerm(1.0, lambdaVars.get(j).get(tour));
+                            }
+                        }
+                        System.out.println("\n\n Constraint added, key: " + key);
+                        System.out.println("Before");
+                        model.addConstr(expr, GRB.LESS_EQUAL, 1.0, "nrc_" + key);
+                        System.out.println("After");
                     }
                 }
             }
@@ -119,7 +141,37 @@ public class Masterproblem {
         model.update();
     }
 
-    public void optimize() {
+    private boolean couplingArcExist(Tour tour, int j, int s) {
+        // Helper function for coupling constraint
+        for (Arc arc : tour.arcs) {
+            if (arc.to == j && arc.time == s) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private boolean NRCArcExist(Tour tour, int t, int j, int s) {
+        // Helper function for NRC constraint
+        boolean doesExist = false;
+        for (Arc arc : tour.arcs) {
+            if (arc.from == t && arc.to == j && arc.time == s) {
+                return true;
+            } else if (arc.from == j && arc.to == t && arc.time == s) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void setRelaxedModel(GRBModel relaxedModel) {
+        this.relaxedModel = relaxedModel;
+    }
+
+    public void optimize() throws GRBException {
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+
         try {
             System.out.println("Starting optimization...");
             model.optimize();
@@ -143,20 +195,29 @@ public class Masterproblem {
     public Map<Integer, Tour> getSolution() throws GRBException {
         Map<Integer, Tour> selectedTours = new HashMap<>();
 
-        for (Map.Entry<Integer, List<GRBVar>> entry : lambdaVars.entrySet()) {
+        for (Map.Entry<Integer, HashMap<Tour, GRBVar>> entry : lambdaVars.entrySet()) {
             int team = entry.getKey();
-            List<GRBVar> vars = entry.getValue();
+            HashMap<Tour, GRBVar> vars = entry.getValue();
             List<Tour> teamTours = tourRepo.getAllTours().get(team);
 
             boolean found = false;
-            for (int i = 0; i < vars.size(); i++) {
-                double value = vars.get(i).get(GRB.DoubleAttr.X);
+            for (GRBVar var : vars.values()) {
+                double value = var.get(GRB.DoubleAttr.X);
                 if (value > 0.5) { // geselecteerde tour
-                    selectedTours.put(team, teamTours.get(i));
+                    selectedTours.put(team, teamTours.get(var.index()));
                     found = true;
                     break;
                 }
             }
+
+//            for (int i = 0; i < vars.size(); i++) {
+//                double value = vars.get(i).get(GRB.DoubleAttr.X);
+//                if (value > 0.5) { // geselecteerde tour
+//                    selectedTours.put(team, teamTours.get(i));
+//                    found = true;
+//                    break;
+//                }
+//            }
 
             if (!found) {
                 System.out.println("Waarschuwing: geen tour geselecteerd voor team " + team);

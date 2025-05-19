@@ -137,6 +137,37 @@ public class CompactModel {
         return x;
     }
 
+//    public GRBVar[][][][] getWorstSolution() throws GRBException {
+//        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE
+//        model.set(GRB.IntParam.PoolSearchMode, 2);       // Get diverse feasible solutions
+//        model.set(GRB.IntParam.PoolSolutions, 10);       // Up to 10 solutions
+//
+//        model.optimize();
+//
+//        int solCount = model.get(GRB.IntAttr.SolCount);
+//        if (solCount == 0) {
+//            throw new GRBException("No feasible solutions found.");
+//        }
+//
+//        int worstIndex = 0;
+//        double worstObj = model.get(GRB.DoubleAttr.PoolObjVal); // ObjVal of first solution
+//
+//        // Loop to find the worst (highest) objective
+//        for (int i = 1; i < solCount; i++) {
+//            double val = model.get(GRB.DoubleAttr.PoolObjVal, i);
+//            if (val > worstObj) {
+//                worstObj = val;
+//                worstIndex = i;
+//            }
+//        }
+//
+//        // Set model to return values from worst solution
+//        model.set(GRB.IntParam.SolutionNumber, worstIndex);
+//
+//        return x; // x contains the same variables; just read their Xn values externally
+//    }
+
+
     public GRBModel getModel() {
         return model;
     }

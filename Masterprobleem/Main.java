@@ -8,9 +8,8 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL6_distances.txt";
+        String fileName = "Data/Distances/NL4_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
@@ -66,10 +65,12 @@ public class Main {
         }
 
         // ====================== Initieel vullen van MasterProblem =========================
-        Masterproblem master = new Masterproblem(new TourRepository(nTeams));
+        Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
         CompactModel compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
         compactModel.getFirstSolution();
+//        compactModel.getWorstSolution();
+        // System.out.println("\n\n\n======================================================\nFound worst solution\n\n");
         GRBVar[][][][] x = compactModel.getFirstSolution();
 
         for (int t = 0; t < nTeams; t++) {
@@ -126,6 +127,7 @@ public class Main {
 
             // Relax to LP for dual prices
             System.out.println("\n\nRelaxing the model...");
+            //GRBModel relaxed = master.getModel().relax();
             GRBModel relaxed = master.getModel().relax();
             relaxed.optimize();
 

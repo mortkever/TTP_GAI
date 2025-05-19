@@ -120,7 +120,7 @@ public class DummyMasterProblem {
 
             // test to get modified cost
             // arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, dualPrices, distanceMatrix, 4);
+            double test_cost = relaxedModel.computeModifiedCost(1, 1, 2, 2, distanceMatrix, 4);
             System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
             model.dispose();
