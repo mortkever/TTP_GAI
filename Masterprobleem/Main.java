@@ -28,7 +28,7 @@ public class Main {
 
         if (DO_COMPACTE_FORMULERING) {
             System.out.println("///////////////////////////////////////////////////////////////////////////////////////////");
-            System.out.println("Compacte formulering solutie");
+            System.out.println("Compacte formulering solution");
 
             int upperbound = 3;  // of een redelijke schatting
             GRBEnv env = new GRBEnv();
