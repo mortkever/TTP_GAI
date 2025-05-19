@@ -95,7 +95,7 @@ public class ShortestPathGenerator {
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
-                if (s == timeSlots - 1 && i == team) {
+                if (s == timeSlots && i == team) {
                     if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost) {
                         bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
                         bestArcs.clear();
