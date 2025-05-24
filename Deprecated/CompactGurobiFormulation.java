@@ -1,3 +1,4 @@
+package Deprecated;
 import com.gurobi.gurobi.*;
 
 public class CompactGurobiFormulation {

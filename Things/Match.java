@@ -1,3 +1,4 @@
+package Things;
 public class Match {
     private Team teamHome;
     private Team teamAway;

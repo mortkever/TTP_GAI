@@ -1,4 +1,9 @@
+package Utils;
 import java.util.*;
+
+import Things.Match;
+import Things.Schedule;
+import Things.Team;
 
 public class ScheduleValidator {
     private final Schedule schedule;

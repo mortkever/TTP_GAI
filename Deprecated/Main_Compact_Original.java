@@ -1,7 +1,15 @@
+package Deprecated;
 import com.gurobi.gurobi.*;
 
 import Masterprobleem.Tour;
 import Masterprobleem.columnGen.ShortestPathGenerator;
+import Things.Match;
+import Things.Schedule;
+import Utils.OutputHandeler;
+import Utils.PrintHandler;
+import Utils.ScheduleValidator;
+import Utils.InputHandler;
+
 
 public class Main_Compact_Original {
     public static void main(String[] args) throws GRBException {

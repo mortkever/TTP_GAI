@@ -1,3 +1,5 @@
+package Utils;
+
 
 // Java Program to Write XML Using DOM Parser
 import javax.xml.parsers.DocumentBuilder;
@@ -40,7 +42,6 @@ public class OutputHandeler {
         Element matches[] = new Element[timeSlots];
         for (int t = 0; t < nTeams; t++) {
             for (int s = 0; s < timeSlots; s++) {
-                System.out.println("\n\n\n\n\n");
                 for (int i = 0; i < nTeams; i++) {
                     for (int j = 0; j < nTeams; j++) {
                         if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) { // Alleen actieve variabelen tonen
