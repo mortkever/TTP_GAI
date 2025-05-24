@@ -21,16 +21,16 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         //test mag weg
-        ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, upperbound, timeSlots, distanceMatrix);
-        for(int i = 0; i< nTeams; i++){
-            Tour tour = spg.generateTour(i);
-            System.err.println(tour);
-        }
-        long total = 0;
-        for(int i =0; i< nTeams;i++){
-            total = spg.times[i] + total;
-        }
-        System.err.println("avg: " + total/nTeams);
+        //ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, upperbound, timeSlots, distanceMatrix);
+        //for(int i = 0; i< nTeams; i++){
+        //    Tour tour = spg.generateTour(i);
+        //    System.err.println(tour);
+        //}
+        //long total = 0;
+        //for(int i =0; i< nTeams;i++){
+        //    total = spg.times[i] + total;
+        //}
+        //System.err.println("avg: " + total/nTeams);
  
         // ====================== Gurobi ============================
         System.out.println("======================== Gurobi ============================");

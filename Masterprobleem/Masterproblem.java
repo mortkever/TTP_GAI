@@ -67,7 +67,7 @@ public class Masterproblem {
             for (GRBVar var : entry.getValue().values()) {
                 expr.addTerm(1.0, var);
             }
-            model.addConstr(expr, GRB.EQUAL, 1.0, "oneTourPerTeam_" + entry.getKey());
+            model.addConstr(expr, GRB.EQUAL, 1.0, "convexity_" + entry.getKey());
         }
 
         // 3. coupling (9): teams om zelfde moment op zelfde locatie (voor een match)
@@ -100,7 +100,7 @@ public class Masterproblem {
                     }
                 }
 
-                System.out.println("\n\n Constraint added, key: " + key);
+                //System.out.println("\n\n Constraint added, key: " + key);
                 model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
         }
@@ -129,10 +129,10 @@ public class Masterproblem {
                                 expr.addTerm(1.0, lambdaVars.get(j).get(tour));
                             }
                         }
-                        System.out.println("\n\n Constraint added, key: " + key);
-                        System.out.println("Before");
+                        //System.out.println("\n\n Constraint added, key: " + key);
+                        //System.out.println("Before");
                         model.addConstr(expr, GRB.LESS_EQUAL, 1.0, "nrc_" + key);
-                        System.out.println("After");
+                        //System.out.println("After");
                     }
                 }
             }
@@ -234,5 +234,4 @@ public class Masterproblem {
     public GRBModel getModel() {
         return model;
     }
-
 }

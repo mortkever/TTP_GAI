@@ -2,6 +2,9 @@ package Masterprobleem;
 
 import com.gurobi.gurobi.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CompactModel {
     private GRBVar x[][][][];
     private GRBModel model;
@@ -136,6 +139,24 @@ public class CompactModel {
 
         return x;
     }
+
+    public List<GRBVar[][][][]> getMultipleSolutions(int maxSolutions) throws GRBException {
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+        model.set(GRB.IntParam.PoolSearchMode, 2);      // Get diverse solutions
+        model.set(GRB.IntParam.PoolSolutions, maxSolutions);
+        model.optimize();
+
+        int solCount = model.get(GRB.IntAttr.SolCount);
+        List<GRBVar[][][][]> solutions = new ArrayList<>();
+
+        for (int i = 0; i < Math.min(solCount, maxSolutions); i++) {
+            model.set(GRB.IntParam.SolutionNumber, i);
+            solutions.add(this.x);  // reuse x, as variables are the same — just values change with .Xn
+        }
+
+        return solutions;
+    }
+
 
 //    public GRBVar[][][][] getWorstSolution() throws GRBException {
 //        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE

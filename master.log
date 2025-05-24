@@ -4094,3 +4094,338 @@ Solution count 1: 7557
 
 Optimal solution found (tolerance 1.00e-04)
 Best objective 7.557000000000e+03, best bound 7.557000000000e+03, gap 0.0000%
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:01:31 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x133fc9c7
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.6820000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.682000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:01:55 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x133fc9c7
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.6820000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.682000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:02:16 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x57dfe7bb
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    7.5570000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  7.557000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:03:03 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x57dfe7bb
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    7.5570000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  7.557000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:04:05 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x57dfe7bb
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    7.5570000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  7.557000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:09:32 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x133fc9c7
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.6820000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.682000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:21:10 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 8 columns and 72 nonzeros
+Model fingerprint: 0x0becf5a1
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 8 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:22:23 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 16 columns and 144 nonzeros
+Model fingerprint: 0x3c491761
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 16 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:35:57 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 216 rows, 12 columns and 186 nonzeros
+Model fingerprint: 0x586ba916
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [3e+03, 5e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 125 rows and 6 columns
+Presolve time: 0.00s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Infeasible model
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:38:39 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 8 columns and 72 nonzeros
+Model fingerprint: 0x0becf5a1
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 8 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:39:24 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 8 columns and 72 nonzeros
+Model fingerprint: 0x0becf5a1
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 8 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:40:57 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 4 columns and 36 nonzeros
+Model fingerprint: 0x2e63ab05
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 4 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03
+
+Gurobi 11.0.3 (win64, Java) logging started Sat May 24 11:41:09 2025
+
+Set parameter Username
+Set parameter LogFile to value "master.log"
+Academic license - for non-commercial use only - expires 2025-10-31
+Gurobi Optimizer version 11.0.3 build v11.0.3rc0 (win64 - Windows 11+.0 (26100.2))
+
+CPU model: AMD Ryzen 7 7840HS with Radeon 780M Graphics, instruction set [SSE2|AVX|AVX2|AVX512]
+Thread count: 8 physical cores, 16 logical processors, using up to 16 threads
+
+Optimize a model with 64 rows, 8 columns and 72 nonzeros
+Model fingerprint: 0x0becf5a1
+Coefficient statistics:
+  Matrix range     [1e+00, 1e+00]
+  Objective range  [2e+03, 2e+03]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+00]
+Presolve removed 64 rows and 8 columns
+Presolve time: 0.00s
+Presolve: All rows and columns removed
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+       0    8.2760000e+03   0.000000e+00   0.000000e+00      0s
+
+Solved in 0 iterations and 0.00 seconds (0.00 work units)
+Optimal objective  8.276000000e+03

@@ -235,7 +235,7 @@ public class ScheduleValidator {
 
         // Iterate through rounds in order
         for(List<Match> round : schedule.getSchedule().values()) {
-            System.out.println("\n\n\n\n\n\n\n\n\nNumber of rounds: " + schedule.getSchedule().size());
+            //System.out.println("\n\n\n\n\n\n\n\n\nNumber of rounds: " + schedule.getSchedule().size());
             for (Match match : round) {
                 // Get team information
                 Team homeTeam = match.getTeamHome();

@@ -64,33 +64,60 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem =========================
+        // ====================== Initieel vullen van MasterProblem (first version) =========================
+//        Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
+//
+//        CompactModel compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
+//        compactModel.getFirstSolution();
+//        GRBVar[][][][] x = compactModel.getFirstSolution();
+//
+//        for (int t = 0; t < nTeams; t++) {
+//            List<Arc> arcs = new ArrayList<>();
+//            double totalCost = 0.0;
+//
+//            for (int s = 0; s < timeSlots + 1; s++) {
+//                for (int i = 0; i < nTeams; i++) {
+//                    for (int j = 0; j < nTeams; j++) {
+//                        if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+//                            arcs.add(new Arc(s, i, j));
+//                            totalCost += distanceMatrix[i][j];
+//                        }
+//                    }
+//                }
+//            }
+//
+//            Tour tour = new Tour(arcs, totalCost);
+//            master.addTour(t, tour);
+//        }
+        // ====================== Initieel vullen van MasterProblem (first version) =========================
+
+        // ====================== Initieel vullen van MasterProblem (New version) =========================
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
-        CompactModel compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
-        compactModel.getFirstSolution();
-//        compactModel.getWorstSolution();
-        // System.out.println("\n\n\n======================================================\nFound worst solution\n\n");
-        GRBVar[][][][] x = compactModel.getFirstSolution();
+        CompactModel compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
+        List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(2);
 
-        for (int t = 0; t < nTeams; t++) {
-            List<Arc> arcs = new ArrayList<>();
-            double totalCost = 0.0;
+        for (GRBVar[][][][] xSol : solutions) {
+            for (int t = 0; t < nTeams; t++) {
+                List<Arc> arcs = new ArrayList<>();
+                double totalCost = 0.0;
 
-            for (int s = 0; s < timeSlots; s++) {
-                for (int i = 0; i < nTeams; i++) {
-                    for (int j = 0; j < nTeams; j++) {
-                        if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
-                            arcs.add(new Arc(s, i, j));
-                            totalCost += distanceMatrix[i][j];
+                for (int s = 0; s < timeSlots + 1; s++) {
+                    for (int i = 0; i < nTeams; i++) {
+                        for (int j = 0; j < nTeams; j++) {
+                            if (xSol[t][s][i][j].get(GRB.DoubleAttr.Xn) > 0.5) {
+                                arcs.add(new Arc(s, i, j));
+                                totalCost += distanceMatrix[i][j];
+                            }
                         }
                     }
                 }
-            }
 
-            Tour tour = new Tour(arcs, totalCost);
-            master.addTour(t, tour);
+                Tour tour = new Tour(arcs, totalCost);
+                master.addTour(t, tour);  // This adds the new column
+            }
         }
+
 
 //        for (int team = 0; team < nTeams; team++) {
 //            Tour original = master.getTourRepo().getAllTours().get(team).get(0);
@@ -98,22 +125,22 @@ public class Main {
 //            master.addTour(team, shifted);
 //        }
 
-        System.out.println("------------ Tours in MasterProblem (initieel) -------------");
-
-        Map<Integer, List<Tour>> allTours = master.getTourRepo().getAllTours();
-        for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
-            int team = entry.getKey();
-            System.out.println("Team " + team + ":");
-
-            for (int tIndex = 0; tIndex < entry.getValue().size(); tIndex++) {
-                Tour tour = entry.getValue().get(tIndex);
-                System.out.println("  Tour " + tIndex + " (Cost: " + tour.cost + "):");
-
-                for (Arc arc : tour.arcs) {
-                    System.out.println("    Time " + arc.time + ": " + arc.from + " → " + arc.to);
-                }
-            }
-        }
+//        System.out.println("------------ Tours in MasterProblem (initieel) -------------");
+//
+//        Map<Integer, List<Tour>> allTours = master.getTourRepo().getAllTours();
+//        for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
+//            int team = entry.getKey();
+//            System.out.println("Team " + team + ":");
+//
+//            for (int tIndex = 0; tIndex < entry.getValue().size(); tIndex++) {
+//                Tour tour = entry.getValue().get(tIndex);
+//                System.out.println("  Tour " + tIndex + " (Cost: " + tour.cost + "):");
+//
+//                for (Arc arc : tour.arcs) {
+//                    System.out.println("    Time " + arc.time + ": " + arc.from + " → " + arc.to);
+//                }
+//            }
+//        }
 
 
         try {
@@ -123,7 +150,7 @@ public class Main {
             //GRBModel model = master.getModel();
 
             // Enkel op het einde 1x oplossen
-            master.optimize();
+            // master.optimize();
 
             // Relax to LP for dual prices
             System.out.println("\n\nRelaxing the model...");
@@ -139,8 +166,8 @@ public class Main {
 
             // test to get modified cost
             // arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, distanceMatrix, distanceMatrix.length);
-            System.out.println("\nMain:\n\tModified cost: " + test_cost);
+            //double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, distanceMatrix, distanceMatrix.length);
+            //System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
             // ====================== FINAL SOLUTION (IP) =========================
             // Get the integer model's solution
