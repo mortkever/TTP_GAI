@@ -146,8 +146,9 @@ public class CompactModel {
 
     public List<GRBVar[][][][]> getMultipleSolutions(int maxSolutions) throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        model.set(GRB.IntParam.PoolSearchMode, 2);      // Get diverse solutions
+        //model.set(GRB.IntParam.PoolSearchMode, 2);      // Get diverse solutions
         model.set(GRB.IntParam.PoolSolutions, maxSolutions);
+        model.set(GRB.IntParam.SolutionLimit, maxSolutions);
         model.optimize();
 
         int solCount = model.get(GRB.IntAttr.SolCount);
