@@ -158,6 +158,7 @@ public class Main {
             System.out.println("\n\nRelaxing the model...");
             //GRBModel relaxed = master.getModel().relax();
             GRBModel relaxed = master.getModel().relax();
+            master.setRelaxedModel(relaxed);
             relaxed.optimize();
 
             master.printLambda(true);
@@ -166,7 +167,7 @@ public class Main {
             ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper(relaxed);
             relaxedModel_helper.extractDuals();
             Map<String, Double> dualPrices = relaxedModel_helper.getDualPrices();
-            relaxedModel_helper.printDuals();
+            //relaxedModel_helper.printDuals();
 
             ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper);
             for (int i = 0; i < nTeams; i++) {

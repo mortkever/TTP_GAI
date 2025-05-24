@@ -12,10 +12,10 @@ public class Masterproblem {
     private GRBEnv env;
     private GRBModel model;
     private GRBModel relaxedModel;
-//    private Map<Integer, List<GRBVar>> lambdaVars;
     private Map<Integer, HashMap<Tour, GRBVar>> lambdaVars;
     private Map<String, List<int[]>> arcIndex;
     private int[][] distanceMatrix;
+    private HashMap<String, GRBVar> relaxedVarMap = new HashMap<>();
 
     public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) {
         this.tourRepo = tourRepo;
@@ -54,7 +54,7 @@ public class Masterproblem {
                 // Arc-index vullen voor latere constraints
                 for (Arc arc : tour.arcs) {
                     String key = arc.time + "_" + arc.from + "_" + arc.to;
-                    arcIndex.computeIfAbsent(key, k -> new ArrayList<>()).add(new int[]{team, p});
+                    arcIndex.computeIfAbsent(key, k -> new ArrayList<>()).add(new int[] { team, p });
                 }
             }
 
@@ -82,7 +82,7 @@ public class Masterproblem {
                 for (int j = 0; j < numTeams; j++) {
                     if (j != t) {
                         for (Tour tour : allTours.get(t)) {
-                            if (couplingArcExist(tour, j, s)) {  // met j=t'
+                            if (couplingArcExist(tour, j, s)) { // met j=t'
                                 expr.addTerm(1.0, lambdaVars.get(t).get(tour));
                             }
                         }
@@ -100,12 +100,12 @@ public class Masterproblem {
                     }
                 }
 
-                //System.out.println("\n\n Constraint added, key: " + key);
+                // System.out.println("\n\n Constraint added, key: " + key);
                 model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
         }
 
-        //Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
+        // Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
         // for all loop
         for (int t = 0; t < numTeams; t++) {
             for (int j = 0; j < numTeams; j++) {
@@ -129,10 +129,10 @@ public class Masterproblem {
                                 expr.addTerm(1.0, lambdaVars.get(j).get(tour));
                             }
                         }
-                        //System.out.println("\n\n Constraint added, key: " + key);
-                        //System.out.println("Before");
+                        // System.out.println("\n\n Constraint added, key: " + key);
+                        // System.out.println("Before");
                         model.addConstr(expr, GRB.LESS_EQUAL, 1.0, "nrc_" + key);
-                        //System.out.println("After");
+                        // System.out.println("After");
                     }
                 }
             }
@@ -151,6 +151,7 @@ public class Masterproblem {
 
         return false;
     }
+
     private boolean NRCArcExist(Tour tour, int t, int j, int s) {
         // Helper function for NRC constraint
         boolean doesExist = false;
@@ -167,6 +168,14 @@ public class Masterproblem {
 
     public void setRelaxedModel(GRBModel relaxedModel) {
         this.relaxedModel = relaxedModel;
+        
+        for (GRBVar var : relaxedModel.getVars()) {
+            try {
+                relaxedVarMap.put(var.get(GRB.StringAttr.VarName), var);
+            } catch (GRBException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void optimize() throws GRBException {
@@ -210,14 +219,14 @@ public class Masterproblem {
                 }
             }
 
-//            for (int i = 0; i < vars.size(); i++) {
-//                double value = vars.get(i).get(GRB.DoubleAttr.X);
-//                if (value > 0.5) { // geselecteerde tour
-//                    selectedTours.put(team, teamTours.get(i));
-//                    found = true;
-//                    break;
-//                }
-//            }
+            // for (int i = 0; i < vars.size(); i++) {
+            // double value = vars.get(i).get(GRB.DoubleAttr.X);
+            // if (value > 0.5) { // geselecteerde tour
+            // selectedTours.put(team, teamTours.get(i));
+            // found = true;
+            // break;
+            // }
+            // }
 
             if (!found) {
                 System.out.println("Waarschuwing: geen tour geselecteerd voor team " + team);
@@ -235,15 +244,15 @@ public class Masterproblem {
         return model;
     }
 
-    public void printLambda(Boolean printAll) throws GRBException{
-            //private Map<Integer, HashMap<Tour, GRBVar>> lambdaVars;
-        for(Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()){
-            for(Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()){
-                if(printAll || tourEntry.getValue().get(GRB.DoubleAttr.X) > 0.5);
+    public void printLambda(Boolean printAll) throws GRBException {
+        for (Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()) {
+            for (Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()) {
+                if (printAll || tourEntry.getValue().get(GRB.DoubleAttr.X) > 0.5)
+                    ;
                 System.err.println(
-                    "Team: " + teamEntry.getKey() + ", GRBVAR: " + tourEntry.getValue().get(GRB.DoubleAttr.X) + "\n" + 
-                    tourEntry.getKey()
-                );
+                        "Team: " + teamEntry.getKey() + ", GRBVAR: " + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName)).get(GRB.DoubleAttr.X) + "\n"
+                                +
+                                tourEntry.getKey());
             }
         }
     }
