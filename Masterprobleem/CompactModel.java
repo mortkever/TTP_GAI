@@ -5,9 +5,13 @@ import com.gurobi.gurobi.*;
 public class CompactModel {
     private GRBVar x[][][][];
     private GRBModel model;
+    private int nTeams;
+    private int timeSlots;
 
     public CompactModel(int nTeams, int timeSlots, int[][] distanceMatrix) throws GRBException {
         this.model = new GRBModel(new GRBEnv());
+        this.nTeams = nTeams;
+        this.timeSlots = timeSlots;
 
         int upperbound = 3;
 
@@ -137,36 +141,37 @@ public class CompactModel {
         return x;
     }
 
-//    public GRBVar[][][][] getWorstSolution() throws GRBException {
-//        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE
-//        model.set(GRB.IntParam.PoolSearchMode, 2);       // Get diverse feasible solutions
-//        model.set(GRB.IntParam.PoolSolutions, 10);       // Up to 10 solutions
-//
-//        model.optimize();
-//
-//        int solCount = model.get(GRB.IntAttr.SolCount);
-//        if (solCount == 0) {
-//            throw new GRBException("No feasible solutions found.");
-//        }
-//
-//        int worstIndex = 0;
-//        double worstObj = model.get(GRB.DoubleAttr.PoolObjVal); // ObjVal of first solution
-//
-//        // Loop to find the worst (highest) objective
-//        for (int i = 1; i < solCount; i++) {
-//            double val = model.get(GRB.DoubleAttr.PoolObjVal, i);
-//            if (val > worstObj) {
-//                worstObj = val;
-//                worstIndex = i;
-//            }
-//        }
-//
-//        // Set model to return values from worst solution
-//        model.set(GRB.IntParam.SolutionNumber, worstIndex);
-//
-//        return x; // x contains the same variables; just read their Xn values externally
-//    }
-
+    // public GRBVar[][][][] getWorstSolution() throws GRBException {
+    // model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE
+    // model.set(GRB.IntParam.PoolSearchMode, 2); // Get diverse feasible solutions
+    // model.set(GRB.IntParam.PoolSolutions, 10); // Up to 10 solutions
+    //
+    // model.optimize();
+    //
+    // int solCount = model.get(GRB.IntAttr.SolCount);
+    // if (solCount == 0) {
+    // throw new GRBException("No feasible solutions found.");
+    // }
+    //
+    // int worstIndex = 0;
+    // double worstObj = model.get(GRB.DoubleAttr.PoolObjVal); // ObjVal of first
+    // solution
+    //
+    // // Loop to find the worst (highest) objective
+    // for (int i = 1; i < solCount; i++) {
+    // double val = model.get(GRB.DoubleAttr.PoolObjVal, i);
+    // if (val > worstObj) {
+    // worstObj = val;
+    // worstIndex = i;
+    // }
+    // }
+    //
+    // // Set model to return values from worst solution
+    // model.set(GRB.IntParam.SolutionNumber, worstIndex);
+    //
+    // return x; // x contains the same variables; just read their Xn values
+    // externally
+    // }
 
     public GRBModel getModel() {
         return model;
@@ -183,5 +188,28 @@ public class CompactModel {
         boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1)));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
+    }
+
+    public void printCompact() {
+
+        try {
+            System.out.println("Initiele oplossing");
+            System.out.println("Totale afstand: " + model.get(GRB.DoubleAttr.ObjVal));
+            for (int t = 0; t < nTeams; t++) {
+                for (int s = 0; s < timeSlots+1; s++) {
+                    for (int i = 0; i < nTeams; i++) {
+                        for (int j = 0; j < nTeams; j++) {
+                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+                                System.out.println("Team " + t + " moved from " + i + " to " + j + " at time " + s);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (GRBException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 }
