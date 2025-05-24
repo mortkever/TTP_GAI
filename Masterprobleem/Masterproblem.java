@@ -234,4 +234,18 @@ public class Masterproblem {
     public GRBModel getModel() {
         return model;
     }
+
+    public void printLambda(Boolean printAll) throws GRBException{
+            //private Map<Integer, HashMap<Tour, GRBVar>> lambdaVars;
+        for(Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()){
+            for(Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()){
+                if(printAll || tourEntry.getValue().get(GRB.DoubleAttr.X) > 0.5);
+                System.err.println(
+                    "Team: " + teamEntry.getKey() + ", GRBVAR: " + tourEntry.getValue().get(GRB.DoubleAttr.X) + "\n" + 
+                    tourEntry.getKey()
+                );
+            }
+        }
+    }
+
 }
