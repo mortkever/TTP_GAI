@@ -47,7 +47,7 @@ public class Masterproblem {
 
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
-                System.out.println("\n\nTour cost: " + tour.cost);
+                System.out.println("\nTour cost: " + tour.cost);
                 GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
 
@@ -117,7 +117,6 @@ public class Masterproblem {
                         // Somatie loop 1
                         for (Tour tour : allTours.get(t)) {
                             if (NRCArcExist(tour, t, j, s)) {
-                                System.out.println("Sommatie 1");
                                 expr.addTerm(1.0, lambdaVars.get(t).get(tour));
                             }
                         }
@@ -125,7 +124,6 @@ public class Masterproblem {
                         // Somatie loop 2
                         for (Tour tour : allTours.get(j)) {
                             if (NRCArcExist(tour, j, t, s)) {
-                                System.out.println("Sommatie 2");
                                 expr.addTerm(1.0, lambdaVars.get(j).get(tour));
                             }
                         }
@@ -168,7 +166,7 @@ public class Masterproblem {
 
     public void setRelaxedModel(GRBModel relaxedModel) {
         this.relaxedModel = relaxedModel;
-        
+
         for (GRBVar var : relaxedModel.getVars()) {
             try {
                 relaxedVarMap.put(var.get(GRB.StringAttr.VarName), var);
@@ -247,12 +245,15 @@ public class Masterproblem {
     public void printLambda(Boolean printAll) throws GRBException {
         for (Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()) {
             for (Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()) {
-                if (printAll || tourEntry.getValue().get(GRB.DoubleAttr.X) > 0.5)
-                    ;
-                System.err.println(
-                        "Team: " + teamEntry.getKey() + ", GRBVAR: " + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName)).get(GRB.DoubleAttr.X) + "\n"
-                                +
-                                tourEntry.getKey());
+                if (printAll || relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
+                        .get(GRB.DoubleAttr.X) > 0.5)
+                    System.err.println(
+                            "Team: " + teamEntry.getKey() + ", GRBVAR: "
+                                    + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
+                                            .get(GRB.DoubleAttr.X)
+                                    + "\n"
+                                    +
+                                    tourEntry.getKey());
             }
         }
     }
