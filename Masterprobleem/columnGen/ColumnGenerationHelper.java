@@ -11,13 +11,14 @@ public class ColumnGenerationHelper {
     // Stores dual prices
     private Map<String, Double> dualPrices;
     private double[][][][] modCostCache;
-
-    public ColumnGenerationHelper(GRBModel model) throws GRBException {
-        // Check if the model is valid
-        this.checkValidModel(model);
-
-        this.masterModel = model;
+    
+    public ColumnGenerationHelper() throws GRBException {
         this.dualPrices = new HashMap<>();
+    }
+
+    public void setModel(GRBModel model) throws GRBException {
+        this.checkValidModel(model);
+        this.masterModel = model;
     }
 
     private void checkValidModel(GRBModel model) throws GRBException {
@@ -94,11 +95,13 @@ public class ColumnGenerationHelper {
         if(modCostCache[t][s][i][j] != Double.MAX_VALUE){
             return modCostCache[t][s][i][j];
         }
+
         // It will be calculated as c = X - Y - Z for readability
         //System.out.println("\nModified costs:");
 
         // X: base travel distance
         double cost = distanceMatrix[i][j];
+        //System.out.println("\n\nBefore: " + cost);
         //System.out.println("Default cost: " + cost);
 
         // Y: subtract π_(ts) + π_(is) if i ≠ t (i.e., this is an away game)
@@ -107,8 +110,9 @@ public class ColumnGenerationHelper {
             double pi_is = 0.0;
 
             for (int opp = 0; opp < numTeams; opp++) {
-                String pi_ts_key = "matchOnce_" + t + "_" + opp + "_" + s;
-                String pi_is_key = "matchOnce_" + i + "_" + opp + "_" + s;
+                // The key is: "coupling_" + s + "_" + t;
+                String pi_ts_key = "coupling_" + s + "_" + t;
+                String pi_is_key = "coupling_" + s + "_" + i;
 
                 pi_ts += dualPrices.getOrDefault(pi_ts_key, 0.0);
                 pi_is += dualPrices.getOrDefault(pi_is_key, 0.0);
@@ -124,11 +128,12 @@ public class ColumnGenerationHelper {
         // Z: subtract β_{ijs} or β_{jis}, unless s == 2(n - 1)
         if (s != 2 * (numTeams - 1)) {
             String betaKey;
+            // The key is: "nrc_" + s + "_" + t + "_" + j
 
             if (i < j) {
-                betaKey = "nrc_" + i + "_" + j + "_" + s;
+                betaKey = "nrc_" + s + "_" + i + "_" + j;
             } else if (i > j) {
-                betaKey = "nrc_" + j + "_" + i + "_" + s;
+                betaKey = "nrc_" + s + "_" + j + "_" + i;
             } else {
                 betaKey = null;
             }
@@ -143,6 +148,7 @@ public class ColumnGenerationHelper {
 
         //System.out.println("Modified cost: " + cost);
         modCostCache[t][s][i][j] = cost;
+        //System.out.println("After: " + cost);
         return cost;
 
         // Some extra information:
