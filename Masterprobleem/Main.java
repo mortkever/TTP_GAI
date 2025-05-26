@@ -170,14 +170,24 @@ public class Main {
                 System.out.println("\n\nRelaxing the model...");
                 GRBModel relaxed = master.getModel().relax();
                 relaxed.optimize();
+
                 int status = relaxed.get(GRB.IntAttr.Status);
                 System.out.println("Status: " + status);
                 master.setRelaxedModel(relaxed);
 
+                // Check variable values with tolerance
                 for (GRBVar var : relaxed.getVars()) {
+                    double value = var.get(GRB.DoubleAttr.X);
                     System.out.println(var.get(GRB.StringAttr.VarName) +
-                            " type=" + var.get(GRB.CharAttr.VType) +
-                            " value=" + var.get(GRB.DoubleAttr.X));
+                            " type=" + var.get(GRB.CharAttr.VType) +  // Should be 'C' for continuous
+                            " value=" + value +
+                            " isBinaryLike=" + (Math.abs(value - 1.0) < 1e-6 || Math.abs(value) < 1e-6));
+                }
+
+                // Print constraints to check for implicit binary behavior
+                for (GRBConstr constr : relaxed.getConstrs()) {
+                    System.out.println("Constraint: " + constr.get(GRB.StringAttr.ConstrName) +
+                            " RHS=" + constr.get(GRB.DoubleAttr.RHS));
                 }
 
                 master.printLambda(false);

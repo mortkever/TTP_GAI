@@ -113,7 +113,7 @@ public class DummyMasterProblem {
             relaxed.optimize();
 
             // Extract dual prices
-            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper(relaxed);
+            ColumnGenerationHelper relaxedModel = new ColumnGenerationHelper();
             relaxedModel.extractDuals();
             Map<String, Double> dualPrices = relaxedModel.getDualPrices();
             relaxedModel.printDuals();
