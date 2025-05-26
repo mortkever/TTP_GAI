@@ -1,7 +1,7 @@
 package Dummy_Test;
 
-import Masterprobleem.InputHandler;
 import Masterprobleem.columnGen.ColumnGenerationHelper;
+import Utils.InputHandler;
 
 import com.gurobi.gurobi.*;
 import java.util.*;
@@ -12,7 +12,7 @@ public class DummyMasterProblem {
         try {
             // Random
             String fileName = "Data/Distances/NL4_distances.txt";
-            Masterprobleem.InputHandler inputHandler = new InputHandler(fileName);
+            Utils.InputHandler inputHandler = new InputHandler(fileName);
             int[][] distanceMatrix = inputHandler.getDistanceMatrix();
             int nTeams = distanceMatrix.length;
             int timeSlots = 2 * (nTeams - 1) + 1;

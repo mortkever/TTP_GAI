@@ -4,6 +4,9 @@ import com.gurobi.gurobi.*;
 
 import Masterprobleem.columnGen.ColumnGenerationHelper;
 import Masterprobleem.columnGen.ShortestPathGenerator;
+import Utils.InputHandler;
+import Utils.OutputHandeler;
+import Utils.PrintHandler;
 
 import java.util.*;
 
@@ -33,15 +36,14 @@ public class Main {
 
             int upperbound = 3; // of een redelijke schatting
             GRBEnv env = new GRBEnv();
-            CompactGurobiFormulation compact = new CompactGurobiFormulation(distanceMatrix, upperbound, env);
-            GRBModel model = compact.getModel();
-            model.optimize();
 
-            FirstSolution firstSolution_compact = new FirstSolution(nTeams, timeSlots, distanceMatrix);
+            CompactModel firstSolution_compact = new Masterprobleem.CompactModel(nTeams,timeSlots,distanceMatrix);
             firstSolution_compact.getFirstSolution();
             GRBVar[][][][] x = firstSolution_compact.getFirstSolution();
 
             // GRBVar[][][][] x = compact.getX();
+            GRBModel model = firstSolution_compact.getModel();
+            model.optimize();
 
             if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
                 System.out.println("Oplossing gevonden");
@@ -176,12 +178,13 @@ public class Main {
             // GRBModel model = master.getModel();
 
             // Enkel op het einde 1x oplossen
-            // master.optimize();
+            master.optimize();
 
             // Relax to LP for dual prices
             System.out.println("\n\nRelaxing the model...");
             //GRBModel relaxed = master.getModel().relax();
             GRBModel relaxed = master.getModel().relax();
+            master.setRelaxedModel(relaxed);
             relaxed.optimize();
 
             //master.printLambda(true);
@@ -190,7 +193,7 @@ public class Main {
             ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper(relaxed);
             relaxedModel_helper.extractDuals();
             Map<String, Double> dualPrices = relaxedModel_helper.getDualPrices();
-            relaxedModel_helper.printDuals();
+            //relaxedModel_helper.printDuals();
 
             ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper);
             for (int i = 0; i < nTeams; i++) {

@@ -1,8 +1,14 @@
-import javax.xml.stream.*;
-import java.io.*;
-import java.util.*;
+package Utils;
 
-import com.gurobi.gurobi.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class InputHandler {
     private int[][] distances;
 
@@ -94,3 +100,4 @@ public class InputHandler {
         return distances;
     }
 }
+
