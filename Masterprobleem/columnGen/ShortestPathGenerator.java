@@ -90,8 +90,8 @@ public class ShortestPathGenerator {
     private boolean DFSrec(int team, int s, int from, double cost) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
-            if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) >= bestCost
-                    || (s == timeSlots && i != team))
+            if (/*cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) >= bestCost
+                    ||*/ (s == timeSlots && i != team))
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
