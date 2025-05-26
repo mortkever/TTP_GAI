@@ -144,55 +144,67 @@ public class CompactModel {
         return x;
     }
 
-    public List<GRBVar[][][][]> getMultipleSolutions(int maxSolutions) throws GRBException {
+    public List<double[][][][]> getMultipleSolutions(int maxSolutions) throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
-        //model.set(GRB.IntParam.PoolSearchMode, 2);      // Get diverse solutions
+        // model.set(GRB.IntParam.PoolSearchMode, 2); // Get diverse solutions
         model.set(GRB.IntParam.PoolSolutions, maxSolutions);
         model.set(GRB.IntParam.SolutionLimit, maxSolutions);
         model.optimize();
 
         int solCount = model.get(GRB.IntAttr.SolCount);
-        List<GRBVar[][][][]> solutions = new ArrayList<>();
+        List<double[][][][]> solutions = new ArrayList<>();
 
-        for (int i = 0; i < Math.min(solCount, maxSolutions); i++) {
-            model.set(GRB.IntParam.SolutionNumber, i);
-            solutions.add(this.x);  // reuse x, as variables are the same — just values change with .Xn
+        for (int sol = 0; sol < Math.min(solCount, maxSolutions); sol++) {
+            model.set(GRB.IntParam.SolutionNumber, sol);
+            double[][][][] solVal = new double[x.length][x[0].length][x[0][0].length][x[0][0][0].length];
+
+            for (int t = 0; t < x.length; t++) {
+                for (int s = 0; s < x[t].length; s++) {
+                    for (int i = 0; i < x[t][s].length; i++) {
+                        for (int j = 0; j < x[t][s][i].length; j++) {
+                            solVal[t][s][i][j] = x[t][s][i][j].get(GRB.DoubleAttr.Xn);
+                        }
+                    }
+                }
+            }
+
+            solutions.add(solVal);
         }
 
         return solutions;
     }
 
-
-//    public GRBVar[][][][] getWorstSolution() throws GRBException {
-//        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE
-//        model.set(GRB.IntParam.PoolSearchMode, 2);       // Get diverse feasible solutions
-//        model.set(GRB.IntParam.PoolSolutions, 10);       // Up to 10 solutions
-//
-//        model.optimize();
-//
-//        int solCount = model.get(GRB.IntAttr.SolCount);
-//        if (solCount == 0) {
-//            throw new GRBException("No feasible solutions found.");
-//        }
-//
-//        int worstIndex = 0;
-//        double worstObj = model.get(GRB.DoubleAttr.PoolObjVal); // ObjVal of first solution
-//
-//        // Loop to find the worst (highest) objective
-//        for (int i = 1; i < solCount; i++) {
-//            double val = model.get(GRB.DoubleAttr.PoolObjVal, i);
-//            if (val > worstObj) {
-//                worstObj = val;
-//                worstIndex = i;
-//            }
-//        }
-//
-//        // Set model to return values from worst solution
-//        model.set(GRB.IntParam.SolutionNumber, worstIndex);
-//
-//        return x; // x contains the same variables; just read their Xn values externally
-//    }
-
+    // public GRBVar[][][][] getWorstSolution() throws GRBException {
+    // model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE); // Keep this as MINIMIZE
+    // model.set(GRB.IntParam.PoolSearchMode, 2); // Get diverse feasible solutions
+    // model.set(GRB.IntParam.PoolSolutions, 10); // Up to 10 solutions
+    //
+    // model.optimize();
+    //
+    // int solCount = model.get(GRB.IntAttr.SolCount);
+    // if (solCount == 0) {
+    // throw new GRBException("No feasible solutions found.");
+    // }
+    //
+    // int worstIndex = 0;
+    // double worstObj = model.get(GRB.DoubleAttr.PoolObjVal); // ObjVal of first
+    // solution
+    //
+    // // Loop to find the worst (highest) objective
+    // for (int i = 1; i < solCount; i++) {
+    // double val = model.get(GRB.DoubleAttr.PoolObjVal, i);
+    // if (val > worstObj) {
+    // worstObj = val;
+    // worstIndex = i;
+    // }
+    // }
+    //
+    // // Set model to return values from worst solution
+    // model.set(GRB.IntParam.SolutionNumber, worstIndex);
+    //
+    // return x; // x contains the same variables; just read their Xn values
+    // externally
+    // }
 
     public GRBModel getModel() {
         return model;
@@ -217,7 +229,7 @@ public class CompactModel {
             System.out.println("Initiele oplossing");
             System.out.println("Totale afstand: " + model.get(GRB.DoubleAttr.ObjVal));
             for (int t = 0; t < nTeams; t++) {
-                for (int s = 0; s < timeSlots+1; s++) {
+                for (int s = 0; s < timeSlots + 1; s++) {
                     for (int i = 0; i < nTeams; i++) {
                         for (int j = 0; j < nTeams; j++) {
                             if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {

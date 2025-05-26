@@ -1,7 +1,6 @@
 package Masterprobleem;
 
 import com.gurobi.gurobi.*;
-import com.gurobi.gurobi.GRB.DoubleAttr;
 
 import Masterprobleem.columnGen.ColumnGenerationHelper;
 import Masterprobleem.columnGen.ShortestPathGenerator;
@@ -103,9 +102,9 @@ public class Main {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
             compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(1);
+            List<double[][][][]> solutions = compactModel.getMultipleSolutions(5);
 
-            for (GRBVar[][][][] xSol : solutions) {
+            for (double[][][][] xSol : solutions) {
                 for (int t = 0; t < nTeams; t++) {
                     List<Arc> arcs = new ArrayList<>();
                     double totalCost = 0.0;
@@ -113,7 +112,7 @@ public class Main {
                     for (int s = 0; s < timeSlots + 1; s++) {
                         for (int i = 0; i < nTeams; i++) {
                             for (int j = 0; j < nTeams; j++) {
-                                if (xSol[t][s][i][j].get(GRB.DoubleAttr.Xn) > 0.5) {
+                                if (xSol[t][s][i][j] > 0.5) {
                                     arcs.add(new Arc(s, i, j));
                                     totalCost += distanceMatrix[i][j];
                                 }
@@ -122,6 +121,7 @@ public class Main {
                     }
 
                     Tour tour = new Tour(arcs, totalCost);
+                    System.out.println(tour);
                     master.addTour(t, tour); // This adds the new column
                 }
             }
@@ -169,8 +169,16 @@ public class Main {
                 // Relax to LP for dual prices
                 System.out.println("\n\nRelaxing the model...");
                 GRBModel relaxed = master.getModel().relax();
-                master.setRelaxedModel(relaxed);
                 relaxed.optimize();
+                int status = relaxed.get(GRB.IntAttr.Status);
+                System.out.println("Status: " + status);
+                master.setRelaxedModel(relaxed);
+
+                for (GRBVar var : relaxed.getVars()) {
+                    System.out.println(var.get(GRB.StringAttr.VarName) +
+                            " type=" + var.get(GRB.CharAttr.VType) +
+                            " value=" + var.get(GRB.DoubleAttr.X));
+                }
 
                 master.printLambda(false);
 

@@ -32,11 +32,13 @@ public class Masterproblem {
                             tour.arcs.get(i).time == existingtTour.arcs.get(i).time) {
                         allSame = false;
                     }
-                } 
+                }
                 if (allSame) {
-/*                     System.err.println("Tour already exists");
-                    System.err.println(tour);
-                    System.out.println(existingtTour); */
+                    /*
+                     * System.err.println("Tour already exists");
+                     * System.err.println(tour);
+                     * System.out.println(existingtTour);
+                     */
                     return 1;
                 }
             }
@@ -170,7 +172,6 @@ public class Masterproblem {
 
     private boolean NRCArcExist(Tour tour, int t, int j, int s) {
         // Helper function for NRC constraint
-        boolean doesExist = false;
         for (Arc arc : tour.arcs) {
             if (arc.from == t && arc.to == j && arc.time == s) {
                 return true;
