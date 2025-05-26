@@ -13,7 +13,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL4_distances.txt";
+        String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
@@ -67,7 +67,8 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem =========================
+        // ====================== Initieel vullen van MasterProblem
+        // =========================
         int strategieInitiele = 2;
         Masterproblem master = null;
         CompactModel compactModel;
@@ -75,7 +76,7 @@ public class Main {
         if (strategieInitiele == 1) {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
-            compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
+            compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
             compactModel.getFirstSolution();
             GRBVar[][][][] x = compactModel.getFirstSolution();
 
@@ -97,14 +98,13 @@ public class Main {
                 Tour tour = new Tour(arcs, totalCost);
                 master.addTour(t, tour);
             }
-        }
-        else if (strategieInitiele == 2) {
+        } else if (strategieInitiele == 2) {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
             compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(2);
+            List<double[][][][]> solutions = compactModel.getMultipleSolutions(5);
 
-            for (GRBVar[][][][] xSol : solutions) {
+            for (double[][][][] xSol : solutions) {
                 for (int t = 0; t < nTeams; t++) {
                     List<Arc> arcs = new ArrayList<>();
                     double totalCost = 0.0;
@@ -112,7 +112,7 @@ public class Main {
                     for (int s = 0; s < timeSlots + 1; s++) {
                         for (int i = 0; i < nTeams; i++) {
                             for (int j = 0; j < nTeams; j++) {
-                                if (xSol[t][s][i][j].get(GRB.DoubleAttr.Xn) > 0.5) {
+                                if (xSol[t][s][i][j] > 0.5) {
                                     arcs.add(new Arc(s, i, j));
                                     totalCost += distanceMatrix[i][j];
                                 }
@@ -121,11 +121,11 @@ public class Main {
                     }
 
                     Tour tour = new Tour(arcs, totalCost);
-                    master.addTour(t, tour);  // This adds the new column
+                    System.out.println(tour);
+                    master.addTour(t, tour); // This adds the new column
                 }
             }
-        }
-        else if (strategieInitiele == 3) {
+        } else if (strategieInitiele == 3) {
             for (int team = 0; team < nTeams; team++) {
                 for (int variant = 0; variant < 2; variant++) {
                     List<Arc> arcs = new ArrayList<>();
@@ -135,7 +135,8 @@ public class Main {
                     for (int s = 0; s < timeSlots; s++) {
                         int from = team;
                         int to = (team + s + variant + 1) % nTeams;
-                        if (from == to) to = (to + 1) % nTeams;  // Avoid self-play
+                        if (from == to)
+                            to = (to + 1) % nTeams; // Avoid self-play
 
                         arcs.add(new Arc(s, from, to));
                         cost += distanceMatrix[from][to];
@@ -157,37 +158,52 @@ public class Main {
             ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix,
                     relaxedModel_helper);
 
-            boolean positiveDuals = false;
+            double prevVal = Double.MAX_VALUE;
+            int counter = 0;
+            int exisingTours = 0;
 
             do {
-                System.out.println("\n\n\nOplossen van het masterprobleem...");
+                System.out.println("\nOplossen van het masterprobleem...");
                 master.buildConstraints();
 
                 // Relax to LP for dual prices
                 System.out.println("\n\nRelaxing the model...");
                 GRBModel relaxed = master.getModel().relax();
-                master.setRelaxedModel(relaxed);
                 relaxed.optimize();
+                int status = relaxed.get(GRB.IntAttr.Status);
+                System.out.println("Status: " + status);
+                master.setRelaxedModel(relaxed);
+
+                for (GRBVar var : relaxed.getVars()) {
+                    System.out.println(var.get(GRB.StringAttr.VarName) +
+                            " type=" + var.get(GRB.CharAttr.VType) +
+                            " value=" + var.get(GRB.DoubleAttr.X));
+                }
 
                 master.printLambda(false);
 
-                //Extract Duals
+                // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
                 relaxedModel_helper.extractDuals();
-                //relaxedModel_helper.printDuals();
+                // relaxedModel_helper.printDuals();
 
-                // Check wehter to stop
-                for (Double dual : relaxedModel_helper.getDualPrices().values()) {
-                    if (dual > 0) {
-                        positiveDuals = true;
-                    }
+                // Check wether to stop
+                if (relaxed.get(GRB.DoubleAttr.ObjVal) == prevVal) {
+                    counter++;
+                } else {
+                    counter = 0;
                 }
+                prevVal = relaxed.get(GRB.DoubleAttr.ObjVal);
+                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal) + "\n");
 
+                exisingTours = 0;
                 for (int t = 0; t < nTeams; t++) {
                     Tour tour = spg.generateTour(t);
-                    master.addTour(t, tour);
+                    exisingTours += master.addTour(t, tour);
                 }
-            } while (positiveDuals);
+                System.err.println(counter);
+
+            } while (exisingTours < nTeams);
 
         } catch (GRBException e) {
             e.printStackTrace();

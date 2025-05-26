@@ -22,8 +22,29 @@ public class Masterproblem {
         this.distanceMatrix = distanceMatrix;
     }
 
-    public void addTour(int team, Tour tour) {
+    public int addTour(int team, Tour tour) {
+        for (Tour existingtTour : tourRepo.getAllTours().get(team)) {
+            if (existingtTour.cost == tour.cost) {
+                Boolean allSame = true;
+                for (int i = 0; i < tour.arcs.size(); i++) {
+                    if ((tour.arcs.get(i).from != existingtTour.arcs.get(i).from ||
+                            tour.arcs.get(i).to != existingtTour.arcs.get(i).to) &&
+                            tour.arcs.get(i).time == existingtTour.arcs.get(i).time) {
+                        allSame = false;
+                    }
+                }
+                if (allSame) {
+                    /*
+                     * System.err.println("Tour already exists");
+                     * System.err.println(tour);
+                     * System.out.println(existingtTour);
+                     */
+                    return 1;
+                }
+            }
+        }
         tourRepo.addTour(team, tour);
+        return 0;
     }
 
     public void buildConstraints() throws GRBException {
@@ -38,7 +59,6 @@ public class Masterproblem {
         lambdaVars = new HashMap<>();
         arcIndex = new HashMap<>();
 
-
         // 1. Maak lambda-variabelen
         for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
             int team = entry.getKey();
@@ -47,7 +67,7 @@ public class Masterproblem {
 
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
-                System.out.println("\nTour cost: " + tour.cost);
+                // System.out.println("\nTour cost: " + tour.cost);
                 GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
 
@@ -152,7 +172,6 @@ public class Masterproblem {
 
     private boolean NRCArcExist(Tour tour, int t, int j, int s) {
         // Helper function for NRC constraint
-        boolean doesExist = false;
         for (Arc arc : tour.arcs) {
             if (arc.from == t && arc.to == j && arc.time == s) {
                 return true;
@@ -244,16 +263,18 @@ public class Masterproblem {
 
     public void printLambda(Boolean printAll) throws GRBException {
         for (Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()) {
+            int index = 0;
             for (Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()) {
                 if (printAll || relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
-                        .get(GRB.DoubleAttr.X) > 0.5)
-                    System.err.println(
-                            "Team: " + teamEntry.getKey() + ", GRBVAR: "
-                                    + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
-                                            .get(GRB.DoubleAttr.X)
-                                    + "\n"
-                                    +
-                                    tourEntry.getKey());
+                        .get(GRB.DoubleAttr.X) > 0)
+                    System.err.println(index +
+                            " Team: " + teamEntry.getKey() + ", GRBVAR: "
+                            + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
+                                    .get(GRB.DoubleAttr.X)
+                            + "\n"
+                            +
+                            tourEntry.getKey());
+                index++;
             }
         }
     }
