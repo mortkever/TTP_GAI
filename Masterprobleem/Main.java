@@ -103,7 +103,7 @@ public class Main {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
             compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(2);
+            List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(1);
 
             for (GRBVar[][][][] xSol : solutions) {
                 for (int t = 0; t < nTeams; t++) {
@@ -160,6 +160,7 @@ public class Main {
 
             double prevVal = Double.MAX_VALUE;
             int counter = 0;
+            int exisingTours = 0;
 
             do {
                 System.out.println("\nOplossen van het masterprobleem...");
@@ -185,14 +186,16 @@ public class Main {
                     counter = 0;
                 }
                 prevVal = relaxed.get(GRB.DoubleAttr.ObjVal);
-                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal) );
+                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal) + "\n");
 
+                exisingTours = 0;
                 for (int t = 0; t < nTeams; t++) {
                     Tour tour = spg.generateTour(t);
-                    master.addTour(t, tour);
+                    exisingTours += master.addTour(t, tour);
                 }
                 System.err.println(counter);
-            } while (counter<10);
+
+            } while (exisingTours < nTeams);
 
         } catch (GRBException e) {
             e.printStackTrace();
