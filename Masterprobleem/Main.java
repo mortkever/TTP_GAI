@@ -10,7 +10,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // ====================== Distance matrix =========================
-        String fileName = "Data/Distances/NL6_distances.txt";
+        String fileName = "Data/Distances/NL4_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
         InputHandler inputHandler = new InputHandler(fileName);
@@ -65,40 +65,18 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem (first version) =========================
-//        Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
-//
-//        CompactModel compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
-//        compactModel.getFirstSolution();
-//        GRBVar[][][][] x = compactModel.getFirstSolution();
-//
-//        for (int t = 0; t < nTeams; t++) {
-//            List<Arc> arcs = new ArrayList<>();
-//            double totalCost = 0.0;
-//
-//            for (int s = 0; s < timeSlots + 1; s++) {
-//                for (int i = 0; i < nTeams; i++) {
-//                    for (int j = 0; j < nTeams; j++) {
-//                        if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
-//                            arcs.add(new Arc(s, i, j));
-//                            totalCost += distanceMatrix[i][j];
-//                        }
-//                    }
-//                }
-//            }
-//
-//            Tour tour = new Tour(arcs, totalCost);
-//            master.addTour(t, tour);
-//        }
-        // ====================== Initieel vullen van MasterProblem (first version) =========================
+        // ====================== Initieel vullen van MasterProblem =========================
+        int strategieInitiele = 2;
+        Masterproblem master = null;
+        CompactModel compactModel;
 
-        // ====================== Initieel vullen van MasterProblem (New version) =========================
-        Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
+        if (strategieInitiele == 1) {
+            master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
-        CompactModel compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-        List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(2);
+            compactModel = new CompactModel(nTeams,timeSlots,distanceMatrix);
+            compactModel.getFirstSolution();
+            GRBVar[][][][] x = compactModel.getFirstSolution();
 
-        for (GRBVar[][][][] xSol : solutions) {
             for (int t = 0; t < nTeams; t++) {
                 List<Arc> arcs = new ArrayList<>();
                 double totalCost = 0.0;
@@ -106,7 +84,7 @@ public class Main {
                 for (int s = 0; s < timeSlots + 1; s++) {
                     for (int i = 0; i < nTeams; i++) {
                         for (int j = 0; j < nTeams; j++) {
-                            if (xSol[t][s][i][j].get(GRB.DoubleAttr.Xn) > 0.5) {
+                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
                                 arcs.add(new Arc(s, i, j));
                                 totalCost += distanceMatrix[i][j];
                             }
@@ -115,10 +93,58 @@ public class Main {
                 }
 
                 Tour tour = new Tour(arcs, totalCost);
-                master.addTour(t, tour);  // This adds the new column
+                master.addTour(t, tour);
             }
         }
+        else if (strategieInitiele == 2) {
+            master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
+            compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
+            List<GRBVar[][][][]> solutions = compactModel.getMultipleSolutions(2);
+
+            for (GRBVar[][][][] xSol : solutions) {
+                for (int t = 0; t < nTeams; t++) {
+                    List<Arc> arcs = new ArrayList<>();
+                    double totalCost = 0.0;
+
+                    for (int s = 0; s < timeSlots + 1; s++) {
+                        for (int i = 0; i < nTeams; i++) {
+                            for (int j = 0; j < nTeams; j++) {
+                                if (xSol[t][s][i][j].get(GRB.DoubleAttr.Xn) > 0.5) {
+                                    arcs.add(new Arc(s, i, j));
+                                    totalCost += distanceMatrix[i][j];
+                                }
+                            }
+                        }
+                    }
+
+                    Tour tour = new Tour(arcs, totalCost);
+                    master.addTour(t, tour);  // This adds the new column
+                }
+            }
+        }
+        else if (strategieInitiele == 3) {
+            for (int team = 0; team < nTeams; team++) {
+                for (int variant = 0; variant < 2; variant++) {
+                    List<Arc> arcs = new ArrayList<>();
+                    double cost = 10000 + variant; // Make sure it's high but unique
+
+                    // Fake tour logic: for example, loop around fixed cities
+                    for (int s = 0; s < timeSlots; s++) {
+                        int from = team;
+                        int to = (team + s + variant + 1) % nTeams;
+                        if (from == to) to = (to + 1) % nTeams;  // Avoid self-play
+
+                        arcs.add(new Arc(s, from, to));
+                        cost += distanceMatrix[from][to];
+                    }
+
+                    Tour fakeTour = new Tour(arcs, cost);
+                    master.addTour(team, fakeTour);
+                }
+            }
+
+        }
 
 //        for (int team = 0; team < nTeams; team++) {
 //            Tour original = master.getTourRepo().getAllTours().get(team).get(0);
@@ -158,7 +184,7 @@ public class Main {
             GRBModel relaxed = master.getModel().relax();
             relaxed.optimize();
 
-            master.printLambda(true);
+            //master.printLambda(true);
 
             // Extract dual prices
             ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper(relaxed);
@@ -179,7 +205,7 @@ public class Main {
 
             // test to get modified cost
             // arguments: t, i, j, s, duals, distanceMatrix, numTeams
-            double test_cost = relaxedModel_helper.computeModifiedCost(1, 1, 2, 2, distanceMatrix,
+            double test_cost = relaxedModel_helper.computeModifiedCost(3, 1, 2, 2, distanceMatrix,
                     distanceMatrix.length);
             System.out.println("\nMain:\n\tModified cost: " + test_cost);
 
