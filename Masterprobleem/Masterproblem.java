@@ -38,7 +38,6 @@ public class Masterproblem {
         lambdaVars = new HashMap<>();
         arcIndex = new HashMap<>();
 
-
         // 1. Maak lambda-variabelen
         for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
             int team = entry.getKey();
@@ -47,7 +46,7 @@ public class Masterproblem {
 
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
-                System.out.println("\nTour cost: " + tour.cost);
+                // System.out.println("\nTour cost: " + tour.cost);
                 GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
 
@@ -244,16 +243,18 @@ public class Masterproblem {
 
     public void printLambda(Boolean printAll) throws GRBException {
         for (Map.Entry<Integer, HashMap<Tour, GRBVar>> teamEntry : lambdaVars.entrySet()) {
+            int index = 0;
             for (Map.Entry<Tour, GRBVar> tourEntry : teamEntry.getValue().entrySet()) {
                 if (printAll || relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
-                        .get(GRB.DoubleAttr.X) > 0.5)
-                    System.err.println(
-                            "Team: " + teamEntry.getKey() + ", GRBVAR: "
-                                    + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
-                                            .get(GRB.DoubleAttr.X)
-                                    + "\n"
-                                    +
-                                    tourEntry.getKey());
+                        .get(GRB.DoubleAttr.X) > 0)
+                    System.err.println(index +
+                            " Team: " + teamEntry.getKey() + ", GRBVAR: "
+                            + relaxedVarMap.get(tourEntry.getValue().get(GRB.StringAttr.VarName))
+                                    .get(GRB.DoubleAttr.X)
+                            + "\n"
+                            +
+                            tourEntry.getKey());
+                index++;
             }
         }
     }

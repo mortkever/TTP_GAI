@@ -83,8 +83,12 @@ public class ShortestPathGenerator {
         bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0);
         times[team] = (System.nanoTime() - start) / 1000;
-        System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
-        return new Tour(bestArcs, bestCost);
+        //System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
+        int realCost = 0;
+        for(Arc arc : bestArcs){
+            realCost += costs[arc.from][arc.to]; 
+        }
+        return new Tour(bestArcs, realCost);
     }
 
     private boolean DFSrec(int team, int s, int from, double cost) {
