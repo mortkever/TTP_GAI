@@ -11,7 +11,7 @@ public class ColumnGenerationHelper {
     // Stores dual prices
     private Map<String, Double> dualPrices;
     private double[][][][] modCostCache;
-    
+
     public ColumnGenerationHelper() throws GRBException {
         this.dualPrices = new HashMap<>();
     }
@@ -85,42 +85,39 @@ public class ColumnGenerationHelper {
     }
 
     public double computeModifiedCost(
-            int t,                  // team
-            int i,                  // from
-            int j,                  // to
-            int s,                  // time slot index
+            int t, // team
+            int i, // from
+            int j, // to
+            int s, // time slot index
             int[][] distanceMatrix,
-            int numTeams
-    ) {
-        if(modCostCache[t][s][i][j] != Double.MAX_VALUE){
+            int numTeams) {
+        if (modCostCache[t][s][i][j] != Double.MAX_VALUE) {
             return modCostCache[t][s][i][j];
         }
 
         // It will be calculated as c = X - Y - Z for readability
-        //System.out.println("\nModified costs:");
+        // System.out.println("\nModified costs:");
 
         // X: base travel distance
         double cost = distanceMatrix[i][j];
-        //System.out.println("\n\nBefore: " + cost);
-        //System.out.println("Default cost: " + cost);
+        // System.out.println("\n\nBefore: " + cost);
+        // System.out.println("Default cost: " + cost);
 
         // Y: subtract π_(ts) + π_(is) if i ≠ t (i.e., this is an away game)
         if (i != t) {
             double pi_ts = 0.0;
             double pi_is = 0.0;
 
-            for (int opp = 0; opp < numTeams; opp++) {
-                // The key is: "coupling_" + s + "_" + t;
-                String pi_ts_key = "coupling_" + s + "_" + t;
-                String pi_is_key = "coupling_" + s + "_" + i;
+            // The key is: "coupling_" + s + "_" + t;
+            String pi_ts_key = "coupling_" + s + "_" + t;
+            String pi_is_key = "coupling_" + s + "_" + i;
 
-                pi_ts += dualPrices.getOrDefault(pi_ts_key, 0.0);
-                pi_is += dualPrices.getOrDefault(pi_is_key, 0.0);
-            }
+            pi_ts += dualPrices.getOrDefault(pi_ts_key, 0.0);
+            pi_is += dualPrices.getOrDefault(pi_is_key, 0.0);
 
-            //System.out.println("Y:");
-            //System.out.println("\tpi_ts sum: " + pi_ts);
-            //System.out.println("\tpi_is sum: " + pi_is);
+            // System.out.println("Y:");
+            // System.out.println("\tpi_ts sum: " + pi_ts);
+            // System.out.println("\tpi_is sum: " + pi_is);
 
             cost -= (pi_ts + pi_is);
         }
@@ -139,22 +136,22 @@ public class ColumnGenerationHelper {
             }
 
             if (betaKey != null && dualPrices.containsKey(betaKey)) {
-                //System.out.println("Z:");
-                //System.out.println("\tBetaKey: " + betaKey);
-                //System.out.println("\tBeta value: " + dualPrices.get(betaKey));
+                // System.out.println("Z:");
+                // System.out.println("\tBetaKey: " + betaKey);
+                // System.out.println("\tBeta value: " + dualPrices.get(betaKey));
                 cost -= dualPrices.get(betaKey);
             }
         }
 
-        //System.out.println("Modified cost: " + cost);
+        // System.out.println("Modified cost: " + cost);
         modCostCache[t][s][i][j] = cost;
-        //System.out.println("After: " + cost);
+        // System.out.println("After: " + cost);
         return cost;
 
         // Some extra information:
-//         3 type of constraints in master problem
-//         - Coupling   constraints: "matchOnce_i_j_s"
-//         - Convexity  constraints: "oneTourPerTeam_t"
-//         - NRC        constraints: "nrc_i_j_s"
+        // 3 type of constraints in master problem
+        // - Coupling constraints: "matchOnce_i_j_s"
+        // - Convexity constraints: "oneTourPerTeam_t"
+        // - NRC constraints: "nrc_i_j_s"
     }
 }
