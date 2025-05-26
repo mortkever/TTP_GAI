@@ -97,7 +97,7 @@ public class Masterproblem {
                 GRBLinExpr expr = new GRBLinExpr();
                 String key = s + "_" + t;
 
-                // Somatie loops 1
+                // Somatie loop 1
                 // j = t'
                 for (int j = 0; j < numTeams; j++) {
                     if (j != t) {
@@ -109,7 +109,7 @@ public class Masterproblem {
                     }
                 }
 
-                // Somatie loops 1
+                // Somatie loop 2
                 for (int j = 0; j < numTeams; j++) {
                     if (j != t) {
                         for (Tour tour : allTours.get(j)) {
