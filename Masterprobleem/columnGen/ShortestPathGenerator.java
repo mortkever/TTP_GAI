@@ -100,20 +100,16 @@ public class ShortestPathGenerator {
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
                 if (s == timeSlots && i == team) {
-                    double modifiedCost = cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
-                    modifiedCost *= -1;
-                    if (cost + modifiedCost < bestCost) {
-                        bestCost = cost + modifiedCost;
+                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost) {
+                        bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
                         return true;
                     }
                 } else {
                     visits[i]++;
-                    double modifiedCost = cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
-                    modifiedCost *= -1;
                     if (DFSrec(team, s + 1, i,
-                            cost + modifiedCost)) {
+                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams))) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }

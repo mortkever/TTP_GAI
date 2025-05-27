@@ -67,7 +67,7 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem ========================
+        // ====================== Initieel vullen van MasterProblem
         // =========================
         int strategieInitiele = 2;
         Masterproblem master = null;
@@ -126,7 +126,6 @@ public class Main {
                 }
             }
         } else if (strategieInitiele == 3) {
-            // Super column test
             for (int team = 0; team < nTeams; team++) {
                 for (int variant = 0; variant < 2; variant++) {
                     List<Arc> arcs = new ArrayList<>();
