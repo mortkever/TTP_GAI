@@ -121,7 +121,7 @@ public class Masterproblem {
                 }
 
                 // System.out.println("\n\n Constraint added, key: " + key);
-                model.addConstr(expr, GRB.GREATER_EQUAL, 1.0, "coupling_" + key);
+                model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
         }
 

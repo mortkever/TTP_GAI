@@ -3,7 +3,6 @@ package Masterprobleem.columnGen;
 import com.gurobi.gurobi.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class ColumnGenerationHelper {
 
@@ -12,7 +11,6 @@ public class ColumnGenerationHelper {
     // Stores dual prices
     private Map<String, Double> dualPrices;
     private double[][][][] modCostCache;
-    private boolean randCost = false;
 
     public ColumnGenerationHelper() throws GRBException {
         this.dualPrices = new HashMap<>();
@@ -146,15 +144,8 @@ public class ColumnGenerationHelper {
         }
 
         // System.out.println("Modified cost: " + cost);
-        // System.out.println("After: " + cost);
-
-        // Obtain a number between [0 - 49].
-        if (randCost) {
-            Random rand = new Random();
-            cost = rand.nextInt(1500);
-        }
         modCostCache[t][s][i][j] = cost;
-
+        // System.out.println("After: " + cost);
         return cost;
 
         // Some extra information:
@@ -162,9 +153,5 @@ public class ColumnGenerationHelper {
         // - Coupling constraints: "matchOnce_i_j_s"
         // - Convexity constraints: "oneTourPerTeam_t"
         // - NRC constraints: "nrc_i_j_s"
-    }
-
-    public void setRandCost(boolean useRandCost) {
-        randCost = useRandCost;
     }
 }
