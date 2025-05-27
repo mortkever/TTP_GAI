@@ -154,6 +154,7 @@ public class ColumnGenerationHelper {
             cost = rand.nextInt(1500);
         }
         modCostCache[t][s][i][j] = cost;
+        // Random
 
         return cost;
 
