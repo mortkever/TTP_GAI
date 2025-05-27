@@ -1,0 +1,78 @@
+// --- Datatypes ---
+Node:
+    Set<Arc> forcedArcs
+    Set<Arc> forbiddenArcs
+
+Solution:
+    double cost
+    Map<Team, List<Tour>> tours      // geselecteerde tours (fractioneel of binair)
+    boolean isIntegral               // true als alle λₚ ∈ {0,1}
+
+// Globale variable om beste integer-oplossing bij te houden
+bestSolution ← null
+
+// --- Hoofdprocedure ---
+function BranchAndPrice(rootNode: Node):
+    // 1) Kolomgeneratie op deze node
+    sol ← ColumnGeneration(rootNode)
+
+    if sol.isIntegral then
+        // integer oplossing gevonden, bijwerken als beter
+        if bestSolution == null or sol.cost < bestSolution.cost then
+            bestSolution ← sol
+        end if
+    else
+        // 2) Kies een arc om op te vertakken (fractionele activiteit)
+        branchingArc ← SelectBranchingArc(sol)
+
+        // 3) Maak twee kinderen
+        //   a) Include-tak: forceer arc
+        includeNode ← Node(
+            forcedArcs    = rootNode.forcedArcs ∪ {branchingArc},
+            forbiddenArcs = rootNode.forbiddenArcs
+        )
+        BranchAndPrice(includeNode)
+
+        //   b) Exclude-tak: verbied arc
+        excludeNode ← Node(
+            forcedArcs    = rootNode.forcedArcs,
+            forbiddenArcs = rootNode.forbiddenArcs ∪ {branchingArc}
+        )
+        BranchAndPrice(excludeNode)
+    end if
+end function
+
+// --- Column Generation (LP-relaxatie + Pricing) ---
+function ColumnGeneration(node: Node) → Solution:
+    // A) Initialiseer master: bestaande tours + compacte constraints
+    master ← BuildMasterProblem()
+    ApplyArcRestrictions(master, node.forcedArcs, node.forbiddenArcs)
+
+    loop
+        // B) Los LP-relaxatie op
+        master.optimizeLP()
+        duals ← master.getDualPrices()
+
+        // C) Pricing: voor elke team een nieuw tour zoeken
+        newColumns ← []
+        for team in Teams:
+            tour ← PricingSPP(team, duals, node.forcedArcs, node.forbiddenArcs)
+            if tour.reducedCost < 0 then
+                master.addColumn(team, tour)
+                newColumns.add(tour)
+            end if
+        end for
+
+        // D) Stop zodra er geen negatieve gereduceerde cost meer is
+        if newColumns.isEmpty() then
+            break
+        end if
+    end loop
+
+    // E) Lees oplossing uit (λ-waardes per tour)
+    sol ← master.extractSolution()
+    return sol
+end function
+
+// --- Pricing subprobleem (kortste-pad met arc-restricties) ---
+function PricingSPP(team, duals, forcedArcs, forb
