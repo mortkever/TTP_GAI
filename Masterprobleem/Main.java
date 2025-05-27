@@ -162,6 +162,8 @@ public class Main {
             double prevVal = Double.MAX_VALUE;
             int counter = 0;
             int exisingTours = 0;
+            boolean isfrac = false;
+            relaxedModel_helper.setRandCost(false);
 
             do {
                 System.out.println("\nOplossen van het masterprobleem...");
@@ -179,19 +181,28 @@ public class Main {
                 // Check variable values with tolerance
                 for (GRBVar var : relaxed.getVars()) {
                     double value = var.get(GRB.DoubleAttr.X);
-                    System.out.println(var.get(GRB.StringAttr.VarName) +
-                            " type=" + var.get(GRB.CharAttr.VType) +  // Should be 'C' for continuous
-                            " value=" + value +
-                            " isBinaryLike=" + (Math.abs(value - 1.0) < 1e-6 || Math.abs(value) < 1e-6));
+                    if (value < 1 - 1e-6 && value > 0 + 1e-6) {
+                        isfrac = true;
+                    }
+                    /*
+                     * System.out.println(var.get(GRB.StringAttr.VarName) +
+                     * " type=" + var.get(GRB.CharAttr.VType) + // Should be 'C' for continuous
+                     * " value=" + value +
+                     * " isBinaryLike=" + (Math.abs(value - 1.0) < 1e-6 || Math.abs(value) < 1e-6));
+                     */
                 }
+                if (isfrac)
+                    System.err.println("------------------------------------------------------------");
 
                 // Print constraints to check for implicit binary behavior
-                for (GRBConstr constr : relaxed.getConstrs()) {
-                    System.out.println("Constraint: " + constr.get(GRB.StringAttr.ConstrName) +
-                            " RHS=" + constr.get(GRB.DoubleAttr.RHS));
-                }
+                /*
+                 * for (GRBConstr constr : relaxed.getConstrs()) {
+                 * System.out.println("Constraint: " + constr.get(GRB.StringAttr.ConstrName) +
+                 * " RHS=" + constr.get(GRB.DoubleAttr.RHS));
+                 * }
+                 */
 
-                master.printLambda(false);
+                // master.printLambda(false);
 
                 // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
@@ -202,19 +213,21 @@ public class Main {
                 if (relaxed.get(GRB.DoubleAttr.ObjVal) == prevVal) {
                     counter++;
                 } else {
-                    counter = 0;
+                    counter++;// = 0;
                 }
                 prevVal = relaxed.get(GRB.DoubleAttr.ObjVal);
                 System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal) + "\n");
 
                 exisingTours = 0;
                 for (int t = 0; t < nTeams; t++) {
+                    // for (int k = 0; k < 10; k++) {
                     Tour tour = spg.generateTour(t);
                     exisingTours += master.addTour(t, tour);
+                    // }
                 }
                 System.err.println(counter);
 
-            } while (exisingTours < nTeams);
+            } while (isfrac);
 
         } catch (GRBException e) {
             e.printStackTrace();
