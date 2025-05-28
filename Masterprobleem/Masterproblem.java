@@ -13,7 +13,6 @@ public class Masterproblem {
     private GRBModel model;
     private GRBModel relaxedModel;
     private Map<Integer, HashMap<Tour, GRBVar>> lambdaVars;
-    private Map<String, List<int[]>> arcIndex;
     private int[][] distanceMatrix;
     private HashMap<String, GRBVar> relaxedVarMap = new HashMap<>();
 
@@ -34,11 +33,11 @@ public class Masterproblem {
                     }
                 }
                 if (allSame) {
-                    /*
-                     * System.err.println("Tour already exists");
-                     * System.err.println(tour);
-                     * System.out.println(existingtTour);
-                     */
+                    
+                     System.err.println("Tour already exists");
+                     System.err.println(tour);
+                     System.out.println(existingtTour);
+                    
                     return 1;
                 }
             }
@@ -57,7 +56,6 @@ public class Masterproblem {
         env.start();
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();
-        arcIndex = new HashMap<>();
 
         // 1. Maak lambda-variabelen
         for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
@@ -70,12 +68,6 @@ public class Masterproblem {
                 // System.out.println("\nTour cost: " + tour.cost);
                 GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
-
-                // Arc-index vullen voor latere constraints
-                for (Arc arc : tour.arcs) {
-                    String key = arc.time + "_" + arc.from + "_" + arc.to;
-                    arcIndex.computeIfAbsent(key, k -> new ArrayList<>()).add(new int[] { team, p });
-                }
             }
 
             lambdaVars.put(team, teamVars);
