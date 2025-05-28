@@ -58,7 +58,7 @@ public class ShortestPathGenerator {
     }
 
     private boolean resourceExtentionFunction(int team, int time, int from, int to) {
-        if ((visits[to] > 0 && to != team) || (visits[to] >= nTeams && to == team) && time != (2 * (nTeams - 1) + 1)) {
+        if ((visits[to] > 0 && to != team) || (visits[to] >= nTeams - 1 && to == team) && time != (2 * (nTeams - 1))) {
             return false;
         }
         if (isArcB(team, time, from, to, nTeams)) {
@@ -83,10 +83,10 @@ public class ShortestPathGenerator {
         bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0);
         times[team] = (System.nanoTime() - start) / 1000;
-        //System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
+        System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
         int realCost = 0;
-        for(Arc arc : bestArcs){
-            realCost += costs[arc.from][arc.to]; 
+        for (Arc arc : bestArcs) {
+            realCost += costs[arc.from][arc.to];
         }
         return new Tour(bestArcs, realCost);
     }
@@ -94,27 +94,31 @@ public class ShortestPathGenerator {
     private boolean DFSrec(int team, int s, int from, double cost) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
-            if (/*cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) >= bestCost
-                    ||*/ (s == timeSlots && i != team))
+            if (/*
+                 * cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
+                 * >= bestCost
+                 * ||
+                 */ (s == timeSlots && i != team))
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
+                visits[i]++;
                 if (s == timeSlots && i == team) {
                     if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost) {
                         bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
+                        System.err.println(bestCost);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
                         return true;
                     }
                 } else {
-                    visits[i]++;
                     if (DFSrec(team, s + 1, i,
                             cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams))) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
-                    visits[i]--;
                 }
+                visits[i]--;
             }
             b = b_prev;
         }
