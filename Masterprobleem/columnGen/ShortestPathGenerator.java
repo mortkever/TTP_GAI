@@ -6,6 +6,8 @@ import Masterprobleem.Tour;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gurobi.gurobi.*;
+
 public class ShortestPathGenerator {
     private int upperbound;
     private int nTeams;
@@ -102,23 +104,22 @@ public class ShortestPathGenerator {
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
-                visits[i]++;
                 if (s == timeSlots && i == team) {
                     if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost) {
                         bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
-                        System.err.println(bestCost);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
                         return true;
                     }
                 } else {
+                    visits[i]++;
                     if (DFSrec(team, s + 1, i,
                             cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams))) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
+                    visits[i]--;
                 }
-                visits[i]--;
             }
             b = b_prev;
         }
@@ -127,14 +128,102 @@ public class ShortestPathGenerator {
 
     private static boolean isArcA(int t, int s, int i, int j, int nTeams) {
         boolean one = (t == i && s == 0);
-        boolean two = (j == t && s == (2 * (nTeams - 1) + 1));
-        boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1) + 1) && s != 0;
+        boolean two = (j == t && s == 2 * (nTeams - 1));
+        boolean three = (i != j || (i == t && i == j)) && s != (2 * (nTeams - 1)) && s != 0;
         return one || two || three;
     }
 
     private static boolean isArcB(int t, int s, int i, int j, int nTeams) {
-        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1) + 1));
+        boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1)));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
+    }
+
+    public Tour generateGTour(int team) throws GRBException {
+        GRBEnv env = new GRBEnv();
+        env.set(GRB.IntParam.LogToConsole, 0);
+        env.set(GRB.IntParam.OutputFlag, 0);
+        GRBModel model = new GRBModel(env);
+        GRBVar x[][][] = new GRBVar[timeSlots + 1][nTeams][nTeams];
+        cgenHelper.resetCache(nTeams, timeSlots);
+
+        for (int s = 0; s < timeSlots + 1; s++) {
+            for (int i = 0; i < nTeams; i++) {
+                for (int j = 0; j < nTeams; j++) {
+                    if (isArcA(team, s, i, j, nTeams)) {
+                        x[s][i][j] = model.addVar(0, 1, cgenHelper.computeModifiedCost(team, i, j, s, costs, nTeams),
+                                GRB.BINARY,
+                                (s + "_" + i + "_" + j));
+                    }
+                }
+            }
+        }
+
+        for (int s = 1; s < timeSlots + 1; s++) {
+            for (int j = 0; j < nTeams; j++) {
+
+                GRBLinExpr flow = new GRBLinExpr();
+                for (int i = 0; i < nTeams; i++) {
+                    if (isArcA(team, s - 1, i, j, nTeams)) {
+                        flow.addTerm(1, x[s - 1][i][j]);
+                    }
+                }
+
+                for (int i = 0; i < nTeams; i++) {
+                    if (isArcA(team, s, j, i, nTeams)) {
+                        flow.addTerm(-1, x[s][j][i]);
+                    }
+                }
+                model.addConstr(flow, GRB.EQUAL, 0, "flow_conservation(j=" + j + ",s=" + s + ")");
+
+            }
+        }
+
+        for (int i = 0; i < nTeams; i++) {
+            if (i != team) {
+                GRBLinExpr expr = new GRBLinExpr();
+                for (int s = 1; s < timeSlots + 1; s++) {
+                    for (int j = 0; j < nTeams; j++) {
+                        if (isArcA(team, s, i, j, nTeams))
+                            expr.addTerm(1.0, x[s][i][j]);
+                    }
+                }
+                model.addConstr(expr, '=', 1, "visitation_" + team + "_" + i);
+            }
+        }
+
+        for (int s = 1; s <= 2 * (nTeams - 1) - upperbound; s++) {
+            GRBLinExpr expr = new GRBLinExpr();
+            for (int i = 0; i < nTeams; i++) {
+                for (int j = 0; j < nTeams; j++) {
+                    if (isArcB(team, s, i, j, nTeams)) {
+                        for (int u = 0; u < upperbound; u++) {
+                            expr.addTerm(1.0, x[s + u][i][j]);
+                        }
+                    }
+                }
+            }
+            model.addConstr(expr, GRB.LESS_EQUAL, upperbound - 1, "breaks_" + team);
+        }
+
+        model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+        model.optimize();
+
+        List<Arc> arcs = new ArrayList<>();
+        int totalCost = 0;
+
+        for (int s = 0; s < timeSlots + 1; s++) {
+            for (int i = 0; i < nTeams; i++) {
+                for (int j = 0; j < nTeams; j++) {
+                    if (isArcA(team, s, i, j, nTeams) && x[s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
+                        arcs.add(new Arc(s, i, j));
+                        totalCost += costs[i][j];
+                    }
+                }
+            }
+        }
+
+        return new Tour(arcs, totalCost);
+
     }
 }

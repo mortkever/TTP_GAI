@@ -181,6 +181,7 @@ public class Main {
                 for (GRBVar var : relaxed.getVars()) {
                     double value = var.get(GRB.DoubleAttr.X);
                     if (value < 1 - 1e-6 && value > 0 + 1e-6) {
+                        relaxedModel_helper.setRandCost(false);
                         isfrac = true;
                     }
                     /*
@@ -201,7 +202,7 @@ public class Main {
                  * }
                  */
 
-                // master.printLambda(false);
+                master.printLambda(false);
 
                 // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
@@ -219,14 +220,20 @@ public class Main {
 
                 exisingTours = 0;
                 for (int t = 0; t < nTeams; t++) {
-                    // for (int k = 0; k < 10; k++) {
-                    Tour tour = spg.generateTour(t);
-                    exisingTours += master.addTour(t, tour);
-                    // }
+                    //for (int k = 0; k < 10; k++) {
+                        Tour tour = spg.generateTour(t);
+                        Tour tour2 = spg.generateGTour(t);
+                        System.out.println(tour);
+                        System.out.println(tour2);
+
+                        //exisingTours += master.addTour(t, tour);
+                        exisingTours += master.addTour(t, tour2);
+
+                    //}
                 }
                 System.err.println(counter);
 
-            } while (isfrac);
+            } while (false);//exisingTours<nTeams);
 
         } catch (GRBException e) {
             e.printStackTrace();

@@ -12,7 +12,7 @@ public class ColumnGenerationHelper {
     // Stores dual prices
     private Map<String, Double> dualPrices;
     private double[][][][] modCostCache;
-    private boolean randCost = false;
+    private boolean randCost = true;
 
     public ColumnGenerationHelper() throws GRBException {
         this.dualPrices = new HashMap<>();
