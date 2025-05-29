@@ -72,6 +72,10 @@ public class Main {
         int strategieInitiele = 2;
         Masterproblem master = null;
         CompactModel compactModel;
+        ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
+
+        ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix,
+                relaxedModel_helper);
 
         if (strategieInitiele == 1) {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
@@ -123,6 +127,7 @@ public class Main {
                     Tour tour = new Tour(arcs, totalCost);
                     System.out.println(tour);
                     master.addTour(t, tour); // This adds the new column
+                    spg.addTour(t, tour);
                 }
             }
         } else if (strategieInitiele == 3) {
@@ -153,11 +158,6 @@ public class Main {
             // ====================== MasterProblem oplossen =========================
 
             // Extract dual prices
-            ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
-
-            ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix,
-                    relaxedModel_helper);
-
             double prevVal = Double.MAX_VALUE;
             int counter = 0;
             int exisingTours = 0;
@@ -220,20 +220,20 @@ public class Main {
 
                 exisingTours = 0;
                 for (int t = 0; t < nTeams; t++) {
-                    //for (int k = 0; k < 10; k++) {
-                        Tour tour = spg.generateTour(t);
-                        Tour tour2 = spg.generateGTour(t);
-                        System.out.println(tour);
-                        System.out.println(tour2);
+                    // for (int k = 0; k < 10; k++) {
+                    Tour tour = spg.generateTour(t);
+                    //Tour tour2 = spg.generateGTour(t);
+                    //System.out.println(tour);
+                    //System.out.println(tour2);
 
-                        //exisingTours += master.addTour(t, tour);
-                        exisingTours += master.addTour(t, tour2);
+                    // exisingTours += master.addTour(t, tour);
+                    exisingTours += master.addTour(t, tour);
 
-                    //}
+                    // }
                 }
                 System.err.println(counter);
 
-            } while (false);//exisingTours<nTeams);
+            } while (!isfrac);
 
         } catch (GRBException e) {
             e.printStackTrace();

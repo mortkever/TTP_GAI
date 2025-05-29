@@ -2,6 +2,7 @@ package Masterprobleem.columnGen;
 
 import Masterprobleem.Arc;
 import Masterprobleem.Tour;
+import Masterprobleem.TourRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +21,19 @@ public class ShortestPathGenerator {
     public long[] times;
     private static ShortestPathGenerator spg;
     private ColumnGenerationHelper cgenHelper;
+    private TourRepository existingTours;
+    private int[] visited;
 
     private ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs, ColumnGenerationHelper cgh) {
         this.nTeams = nTeams;
         this.upperbound = upperbound;
         this.timeSlots = ts;
         this.visits = new int[nTeams];
+        this.visited = new int[2 * nTeams - 1];
         this.costs = costs;
         times = new long[nTeams];
         this.cgenHelper = cgh;
+        existingTours = new TourRepository(nTeams);
     }
 
     public static ShortestPathGenerator initializeSPG(int nTeams, int upperbound, int ts, int[][] costs,
@@ -43,6 +48,7 @@ public class ShortestPathGenerator {
             spg.costs = costs;
             spg.times = new long[nTeams];
             spg.cgenHelper = cgenHelper;
+            spg.existingTours = new TourRepository(nTeams);
         }
         return spg;
     }
@@ -83,17 +89,23 @@ public class ShortestPathGenerator {
         bestCost = Integer.MAX_VALUE;
         b = 0;
         bestArcs = new ArrayList<>();
-        DFSrec(team, 0, team, 0);
+        DFSrec(team, 0, team, 0, 0);
         times[team] = (System.nanoTime() - start) / 1000;
         System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
         int realCost = 0;
         for (Arc arc : bestArcs) {
             realCost += costs[arc.from][arc.to];
         }
-        return new Tour(bestArcs, realCost);
+        Tour tour = new Tour(bestArcs, realCost);
+        existingTours.addTour(team, tour);
+        return tour;
     }
 
-    private boolean DFSrec(int team, int s, int from, double cost) {
+    public void addTour(int team, Tour tour) {
+        existingTours.addTour(team, tour);
+    }
+
+    private boolean DFSrec(int team, int s, int from, double cost, int layer) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
             if (/*
@@ -104,8 +116,10 @@ public class ShortestPathGenerator {
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
+                visited[layer] = i;
                 if (s == timeSlots && i == team) {
-                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost) {
+                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost
+                            && isRedundantTour(team)) {
                         bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
                         bestArcs.clear();
                         bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
@@ -114,7 +128,7 @@ public class ShortestPathGenerator {
                 } else {
                     visits[i]++;
                     if (DFSrec(team, s + 1, i,
-                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams))) {
+                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), layer + 1)) {
                         bestArcs.addFirst(new Arc(s, from, i));
                         tourFound = true;
                     }
@@ -137,6 +151,26 @@ public class ShortestPathGenerator {
         boolean one = (t == i && t == j && s != 0 && s != (2 * (nTeams - 1)));
         boolean two = (j != t && t != i);
         return (one || two) && isArcA(t, s, i, j, nTeams);
+    }
+
+    private boolean isRedundantTour(int team) {
+        // Alle tours overlopen
+        List<Tour> tours = existingTours.getTours(team);
+        for (Tour tour : tours) {
+            // Als er een arc verschilt met de gegenereerde tour: abort check, check volgende tour
+            boolean isDuplicate = true;
+            for (Arc arc : tour.arcs) {
+                if (visited[arc.time] != arc.to) {
+                    isDuplicate = false;
+                    break;
+                }
+            }
+            // Als alle arcs overeen komen: zelfde tour => return false;
+            if(isDuplicate){
+                return false;
+            }
+        }
+        return true; // Does not exist in the repo
     }
 
     public Tour generateGTour(int team) throws GRBException {
