@@ -1,7 +1,7 @@
 package Things;
 public class Team {
     private String name;
-    private Integer ID;
+    private int ID;
 
 
     public Team(String name) {
@@ -9,10 +9,15 @@ public class Team {
         this.ID = Integer.parseInt(name.substring(5)) - 1; // Team 1 -> 0, Team 2 -> 1, ...
     }
 
+    public Team(int ID) {
+        this.name = "team " + ID;
+        this.ID = ID;
+    }
+
     public String getName() {
         return name;
     }
-    public Integer getID() {
+    public int getID() {
         return ID;
     }
 

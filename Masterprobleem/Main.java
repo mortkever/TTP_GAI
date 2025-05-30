@@ -1,8 +1,9 @@
 package Masterprobleem;
 
+import Things.Schedule;
+import Utils.ScheduleValidator;
 import com.gurobi.gurobi.*;
 
-import Masterprobleem.columnGen.ColumnGenerationHelper;
 import Masterprobleem.columnGen.ShortestPathGenerator;
 import Utils.InputHandler;
 import Utils.OutputHandeler;
@@ -25,7 +26,6 @@ public class Main {
         printHandler.printDistanceMatrixContents(distanceMatrix);
 
         ////////////////////////////////////////////////////////////////////////
-
         // ====================== Compacte Formulering =========================
         boolean DO_COMPACTE_FORMULERING = false;
 
@@ -67,95 +67,33 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem
-        // =========================
-        int strategieInitiele = 2;
-        Masterproblem master = null;
-        CompactModel compactModel;
+        // ====================== Initieel vullen van MasterProblem =========================
+        // Different strategies:
+        // 1. Add 1 compact formulation solution
+        // 2. Add multiple compact formulation solutions
+        // 3. Add super columns
+        // 4. Add multiple super columns
+        // 5. Add 1 solution of compact formulation and 1 solution of the super columns
+        int strategieInitiele = 4;
+
+        Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
 
-        ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix,
-                relaxedModel_helper);
+        ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(
+                nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper
+        );
 
-        if (strategieInitiele == 1) {
-            master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
-
-            compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            compactModel.getFirstSolution();
-            GRBVar[][][][] x = compactModel.getFirstSolution();
-
-            for (int t = 0; t < nTeams; t++) {
-                List<Arc> arcs = new ArrayList<>();
-                double totalCost = 0.0;
-
-                for (int s = 0; s < timeSlots + 1; s++) {
-                    for (int i = 0; i < nTeams; i++) {
-                        for (int j = 0; j < nTeams; j++) {
-                            if (x[t][s][i][j].get(GRB.DoubleAttr.X) > 0.5) {
-                                arcs.add(new Arc(s, i, j));
-                                totalCost += distanceMatrix[i][j];
-                            }
-                        }
-                    }
-                }
-
-                Tour tour = new Tour(arcs, totalCost);
-                master.addTour(t, tour);
-            }
-        } else if (strategieInitiele == 2) {
-            master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
-
-            compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            List<double[][][][]> solutions = compactModel.getMultipleSolutions(1);
-
-            for (double[][][][] xSol : solutions) {
-                for (int t = 0; t < nTeams; t++) {
-                    List<Arc> arcs = new ArrayList<>();
-                    double totalCost = 0.0;
-
-                    for (int s = 0; s < timeSlots + 1; s++) {
-                        for (int i = 0; i < nTeams; i++) {
-                            for (int j = 0; j < nTeams; j++) {
-                                if (xSol[t][s][i][j] > 0.5) {
-                                    arcs.add(new Arc(s, i, j));
-                                    totalCost += distanceMatrix[i][j];
-                                }
-                            }
-                        }
-                    }
-
-                    Tour tour = new Tour(arcs, totalCost);
-                    System.out.println(tour);
-                    master.addTour(t, tour); // This adds the new column
-                    spg.addTour(t, tour);
-                }
-            }
-        } else if (strategieInitiele == 3) {
-            for (int team = 0; team < nTeams; team++) {
-                for (int variant = 0; variant < 2; variant++) {
-                    List<Arc> arcs = new ArrayList<>();
-                    double cost = 10000 + variant; // Make sure it's high but unique
-
-                    // Fake tour logic: for example, loop around fixed cities
-                    for (int s = 0; s < timeSlots; s++) {
-                        int from = team;
-                        int to = (team + s + variant + 1) % nTeams;
-                        if (from == to)
-                            to = (to + 1) % nTeams; // Avoid self-play
-
-                        arcs.add(new Arc(s, from, to));
-                        cost += distanceMatrix[from][to];
-                    }
-
-                    Tour fakeTour = new Tour(arcs, cost);
-                    master.addTour(team, fakeTour);
-                }
-            }
-
+        try {
+            ColumnGenerationHelper.addInitialSolution(strategieInitiele, master, spg, nTeams, timeSlots, distanceMatrix);
+        } catch (GRBException e) {
+            e.printStackTrace();
+            System.err.println("Failed to initialize master with initial strategy.");
         }
 
         try {
             // ====================== MasterProblem oplossen =========================
+            System.out.println("\n\n---------------------------------");
+            System.out.println("Masterprobleem start:");
 
             // Extract dual prices
             double prevVal = Double.MAX_VALUE;
@@ -187,7 +125,7 @@ public class Main {
                 // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
                 relaxedModel_helper.extractDuals();
-                // relaxedModel_helper.printDuals();
+                //relaxedModel_helper.printDuals();
 
                 System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal));
 
@@ -204,7 +142,7 @@ public class Main {
                 }
 
                 counter++;
-                System.err.println(counter);
+                System.out.println(counter);
 
             } while (optimalTours < nTeams);
             master.printLambda(false);
@@ -257,5 +195,23 @@ public class Main {
 
         return new Tour(newTourArcs, cost);
     }
+
+    public static boolean deepEquals(double[][][][] a, double[][][][] b) {
+        if (a.length != b.length) return false;
+        for (int i = 0; i < a.length; i++) {
+            if (a[i].length != b[i].length) return false;
+            for (int j = 0; j < a[i].length; j++) {
+                if (a[i][j].length != b[i][j].length) return false;
+                for (int k = 0; k < a[i][j].length; k++) {
+                    if (a[i][j][k].length != b[i][j][k].length) return false;
+                    for (int l = 0; l < a[i][j][k].length; l++) {
+                        if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0) return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
 
 }

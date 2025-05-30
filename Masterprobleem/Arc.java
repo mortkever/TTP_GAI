@@ -1,5 +1,7 @@
 package Masterprobleem;
 
+import java.util.Objects;
+
 public class Arc {
     public int time;
     public int from;
@@ -14,5 +16,18 @@ public class Arc {
     @Override
     public String toString() {
         return "(" + time + ", " + from + " -> " + to + ")";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Arc arc = (Arc) o;
+        return time == arc.time && from == arc.from && to == arc.to;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(time, from, to);
     }
 }
