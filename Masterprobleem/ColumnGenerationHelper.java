@@ -193,6 +193,21 @@ public class ColumnGenerationHelper {
 
 
     public static List<Tour> generateFeasibleSuperColumns(int nTeams, int[][] distanceMatrix, boolean reverseHomeAway) {
+        /**
+         * Generates one feasible solution (super columns) based on a round-robin scheduling pattern.
+         * Meant to create a feasible ttp solution fast (the total cost is not important here).
+         *
+         * This method constructs full tours for all teams by:
+         * - Using the standard circle method for the first half of the schedule:
+         *      The circle method fixes one team and rotates the others around it,
+         *      producing a round-robin tournament where every team plays every other team once.
+         * - Mirroring the rounds to create the second half, reversing home/away roles to complete the double round-robin.
+         * - Adding a final arc that brings each team back to its home location after the last match.
+         *
+         * Parameters:
+         * - reverseHomeAway: if true, flips the home/away pattern. used to generate 2 distinct solutions.
+         */
+
         int rounds = 2 * (nTeams - 1);
         List<List<Arc>> teamArcs = new ArrayList<>();
         int[] currentLocation = new int[nTeams];
