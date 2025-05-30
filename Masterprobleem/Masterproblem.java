@@ -32,6 +32,7 @@ public class Masterproblem {
 
         env = new GRBEnv(true);
         env.set("logFile", "master.log");
+        env.set(GRB.IntParam.LogToConsole, 0);
         env.start();
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();

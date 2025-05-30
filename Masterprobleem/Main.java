@@ -106,7 +106,7 @@ public class Main {
             master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
 
             compactModel = new CompactModel(nTeams, timeSlots, distanceMatrix);
-            List<double[][][][]> solutions = compactModel.getMultipleSolutions(5);
+            List<double[][][][]> solutions = compactModel.getMultipleSolutions(1);
 
             for (double[][][][] xSol : solutions) {
                 for (int t = 0; t < nTeams; t++) {
@@ -161,20 +161,16 @@ public class Main {
             double prevVal = Double.MAX_VALUE;
             int counter = 0;
             int exisingTours = 0;
+            int optimalTours = 0;
             boolean isfrac = false;
             relaxedModel_helper.setRandCost(false);
 
             do {
-                System.out.println("\nOplossen van het masterprobleem...");
                 master.buildConstraints();
 
                 // Relax to LP for dual prices
-                System.out.println("\n\nRelaxing the model...");
                 GRBModel relaxed = master.getModel().relax();
                 relaxed.optimize();
-
-                int status = relaxed.get(GRB.IntAttr.Status);
-                System.out.println("Status: " + status);
                 master.setRelaxedModel(relaxed);
 
                 // Check variable values with tolerance
@@ -184,56 +180,34 @@ public class Main {
                         relaxedModel_helper.setRandCost(false);
                         isfrac = true;
                     }
-                    /*
-                     * System.out.println(var.get(GRB.StringAttr.VarName) +
-                     * " type=" + var.get(GRB.CharAttr.VType) + // Should be 'C' for continuous
-                     * " value=" + value +
-                     * " isBinaryLike=" + (Math.abs(value - 1.0) < 1e-6 || Math.abs(value) < 1e-6));
-                     */
                 }
-                if (isfrac)
-                    System.err.println("------------------------------------------------------------");
 
-                // Print constraints to check for implicit binary behavior
-                /*
-                 * for (GRBConstr constr : relaxed.getConstrs()) {
-                 * System.out.println("Constraint: " + constr.get(GRB.StringAttr.ConstrName) +
-                 * " RHS=" + constr.get(GRB.DoubleAttr.RHS));
-                 * }
-                 */
-
-                master.printLambda(false);
+                // master.printLambda(false);
 
                 // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
                 relaxedModel_helper.extractDuals();
                 // relaxedModel_helper.printDuals();
 
-                // Check wether to stop
-                if (relaxed.get(GRB.DoubleAttr.ObjVal) == prevVal) {
-                    counter++;
-                } else {
-                    counter++;// = 0;
-                }
-                prevVal = relaxed.get(GRB.DoubleAttr.ObjVal);
-                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal) + "\n");
+                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal));
 
                 exisingTours = 0;
+                optimalTours = 0;
                 for (int t = 0; t < nTeams; t++) {
-                    // for (int k = 0; k < 10; k++) {
                     Tour tour = spg.generateTour(t);
-                    //Tour tour2 = spg.generateGTour(t);
-                    //System.out.println(tour);
-                    //System.out.println(tour2);
 
-                    // exisingTours += master.addTour(t, tour);
-                    exisingTours += master.addTour(t, tour);
-
-                    // }
+                    if (tour.arcs.size() > 0) {
+                        exisingTours += master.addTour(t, tour);
+                    } else {
+                        optimalTours++;
+                    }
                 }
+
+                counter++;
                 System.err.println(counter);
 
-            } while (!isfrac);
+            } while (optimalTours < nTeams);
+            master.printLambda(false);
 
         } catch (GRBException e) {
             e.printStackTrace();

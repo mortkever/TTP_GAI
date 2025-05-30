@@ -90,15 +90,19 @@ public class ShortestPathGenerator {
         b = 0;
         bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0, 0);
-        times[team] = (System.nanoTime() - start) / 1000;
-        System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
-        int realCost = 0;
-        for (Arc arc : bestArcs) {
-            realCost += costs[arc.from][arc.to];
+        // times[team] = (System.nanoTime() - start) / 1000;
+        // System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
+        if (bestCost - cgenHelper.getMu(team) < 0) {
+            int realCost = 0;
+            for (Arc arc : bestArcs) {
+                realCost += costs[arc.from][arc.to];
+            }
+            Tour tour = new Tour(bestArcs, realCost);
+            existingTours.addTour(team, tour);
+            return tour;
+        } else {
+            return new Tour(new ArrayList<Arc>(), 0);
         }
-        Tour tour = new Tour(bestArcs, realCost);
-        existingTours.addTour(team, tour);
-        return tour;
     }
 
     public void addTour(int team, Tour tour) {
@@ -157,7 +161,8 @@ public class ShortestPathGenerator {
         // Alle tours overlopen
         List<Tour> tours = existingTours.getTours(team);
         for (Tour tour : tours) {
-            // Als er een arc verschilt met de gegenereerde tour: abort check, check volgende tour
+            // Als er een arc verschilt met de gegenereerde tour: abort check, check
+            // volgende tour
             boolean isDuplicate = true;
             for (Arc arc : tour.arcs) {
                 if (visited[arc.time] != arc.to) {
@@ -166,7 +171,7 @@ public class ShortestPathGenerator {
                 }
             }
             // Als alle arcs overeen komen: zelfde tour => return false;
-            if(isDuplicate){
+            if (isDuplicate) {
                 return false;
             }
         }

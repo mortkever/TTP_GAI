@@ -86,6 +86,10 @@ public class ColumnGenerationHelper {
         }
     }
 
+    public double getMu(int team){
+        return dualPrices.get("convexity_" + team);
+    }
+
     public double computeModifiedCost(
             int t, // team
             int i, // from
