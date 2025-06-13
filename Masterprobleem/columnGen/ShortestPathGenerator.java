@@ -6,7 +6,10 @@ import Masterprobleem.Tour;
 import Masterprobleem.TourRepository;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Stack;
 
 import com.gurobi.gurobi.*;
 
@@ -18,12 +21,12 @@ public class ShortestPathGenerator {
     private int b;
     private double bestCost;
     private int[][] costs;
-    private List<Arc> bestArcs = new ArrayList<>();
     public long[] times;
     private static ShortestPathGenerator spg;
     private ColumnGenerationHelper cgenHelper;
     private TourRepository existingTours;
     private int[] visited;
+    public PriorityQueue<Tour> tours;
 
     private ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs, ColumnGenerationHelper cgh) {
         this.nTeams = nTeams;
@@ -81,29 +84,35 @@ public class ShortestPathGenerator {
         return true;
     }
 
-    public Tour generateTour(int team) {
+    public void generateTour(int team) {
         long start = System.nanoTime();
+
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
         cgenHelper.resetCache(nTeams, timeSlots);
         bestCost = Double.MAX_VALUE;
         b = 0;
-        bestArcs = new ArrayList<>();
-        DFSrec(team, 0, team, 0, 0);
-        
+        tours = new PriorityQueue<>();
+        DFSrec(team, 0, team, 0, 0, new Stack<>());
+
         // times[team] = (System.nanoTime() - start) / 1000;
         // System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
-        if (bestCost - cgenHelper.getMu(team) < 0) {
+        int tourCounter = 0;
+        ArrayList<Tour> toRemove = new ArrayList<>();
+
+        Iterator<Tour> iterator = tours.iterator();
+        while (iterator.hasNext()) {
+            Tour tour = iterator.next();
+
             Double realCost = 0.0;
-            for (Arc arc : bestArcs) {
+            for (Arc arc : tour.getArcs()) {
                 realCost += costs[arc.from][arc.to];
             }
-            Tour tour = new Tour(bestArcs, realCost);
+
+            tour.setCost(realCost);
             existingTours.addTour(team, tour);
-            return tour;
-        } else {
-            return new Tour(new ArrayList<Arc>(), 0);
+            tourCounter++;
         }
     }
 
@@ -111,35 +120,38 @@ public class ShortestPathGenerator {
         existingTours.addTour(team, tour);
     }
 
-    private boolean DFSrec(int team, int s, int from, double cost, int layer) {
+    private boolean DFSrec(int team, int s, int from, double cost, int layer, Stack<Arc> arcs) {
         boolean tourFound = false;
         for (int i = 0; i < nTeams; i++) {
-            if (/*
-                 * cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
-                 * >= bestCost
-                 * ||
-                 */ (s == timeSlots && i != team))
+            if (s == timeSlots && i != team)
                 continue;
             int b_prev = b;
             if (resourceExtentionFunction(team, s, from, i)) {
                 visited[layer] = i;
+                arcs.add(new Arc(s, from, i));
+
                 if (s == timeSlots && i == team) {
-                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams) < bestCost
-                            && isRedundantTour(team)) {
-                        bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams);
-                        bestArcs.clear();
-                        bestArcs.add(new Arc(s, from, i)); // is dit gegarandeert een pad naar homebase? Ja...?
+                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
+                            - cgenHelper.getMu(team) < 0
+                            && isNotRedundantTour(team)) {
+                        bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
+                                - cgenHelper.getMu(team);
+                        ArrayList<Arc> tourArcs = new ArrayList<>(arcs);
+                        tours.add(new Tour(tourArcs, bestCost));
+                        arcs.pop();
                         return true;
                     }
                 } else {
                     visits[i]++;
                     if (DFSrec(team, s + 1, i,
-                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), layer + 1)) {
-                        bestArcs.addFirst(new Arc(s, from, i));
+                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), layer + 1,
+                            arcs)) {
                         tourFound = true;
                     }
                     visits[i]--;
                 }
+
+                arcs.pop();
             }
             b = b_prev;
         }
@@ -159,14 +171,14 @@ public class ShortestPathGenerator {
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 
-    private boolean isRedundantTour(int team) {
+    private boolean isNotRedundantTour(int team) {
         // Alle tours overlopen
         List<Tour> tours = existingTours.getTours(team);
         for (Tour tour : tours) {
             // Als er een arc verschilt met de gegenereerde tour: abort check, check
             // volgende tour
             boolean isDuplicate = true;
-            for (Arc arc : tour.arcs) {
+            for (Arc arc : tour.getArcs()) {
                 if (visited[arc.time] != arc.to) {
                     isDuplicate = false;
                     break;

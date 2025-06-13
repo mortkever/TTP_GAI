@@ -16,9 +16,15 @@ public class Masterproblem {
     private int[][] distanceMatrix;
     private HashMap<String, GRBVar> relaxedVarMap = new HashMap<>();
 
-    public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) {
+    public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) throws GRBException {
         this.tourRepo = tourRepo;
         this.distanceMatrix = distanceMatrix;
+
+        // Create environment ONCE
+        env = new GRBEnv(true);
+        env.set("logFile", "master.log");
+        env.set(GRB.IntParam.LogToConsole, 0);
+        env.start();
     }
 
     public int addTour(int team, Tour tour) {
@@ -30,10 +36,10 @@ public class Masterproblem {
         int numTeams = allTours.size();
         int numSlots = 2 * (numTeams - 1);
 
-        env = new GRBEnv(true);
-        env.set("logFile", "master.log");
-        env.set(GRB.IntParam.LogToConsole, 0);
-        env.start();
+        // Dispose previous model if it exists
+        if (model != null) {
+            model.dispose();
+        }
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();
 
@@ -46,7 +52,7 @@ public class Masterproblem {
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
                 // System.out.println("\nTour cost: " + tour.cost);
-                GRBVar var = model.addVar(0.0, 1.0, tour.cost, GRB.BINARY, "lambda_" + team + "_" + p);
+                GRBVar var = model.addVar(0.0, 1.0, tour.getCost(), GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
             }
 
@@ -133,7 +139,7 @@ public class Masterproblem {
 
     private boolean couplingArcExist(Tour tour, int j, int s) {
         // Helper function for coupling constraint
-        for (Arc arc : tour.arcs) {
+        for (Arc arc : tour.getArcs()) {
             if (arc.to == j && arc.time == s) {
                 return true;
             }
@@ -144,7 +150,7 @@ public class Masterproblem {
 
     private boolean NRCArcExist(Tour tour, int t, int j, int s) {
         // Helper function for NRC constraint
-        for (Arc arc : tour.arcs) {
+        for (Arc arc : tour.getArcs()) {
             if (arc.from == t && arc.to == j && arc.time == s) {
                 return true;
             } else if (arc.from == j && arc.to == t && arc.time == s) {

@@ -134,25 +134,18 @@ public class Main {
 
                 exisingTours = 0;
                 optimalTours = 0;
+                int maxNumber = 50000;
                 for (int t = 0; t < nTeams; t++) {
-                    Tour tour = spg.generateTour(t);
-
-                    /*
-                     * if (tour.arcs.size() > 0) {
-                     * exisingTours += master.addTour(t, tour);
-                     * } else {
-                     * optimalTours++;
-                     * }
-                     */
-                    int tours = 1;
-                    while (tour.arcs.size() > 0 && tours < 50) {
-                        exisingTours += master.addTour(t, tour);
-                        tour = spg.generateTour(t);
-                        //System.out.println("tours:" + tours + " team " + t);
-                        tours++;
-                    }
-                    if(tours == 1)
+                    spg.generateTour(t);
+                    if (spg.tours.size() > 0) {
+                        while (spg.tours.size() > maxNumber)
+                            spg.tours.poll();
+                        for (Tour tour : spg.tours) {
+                            exisingTours += master.addTour(t, tour);
+                        }
+                    } else {
                         optimalTours++;
+                    }
                 }
 
                 counter++;
@@ -165,11 +158,11 @@ public class Main {
             e.printStackTrace();
         }
 
-        System.out.println("Tijdsduur (µs): " + (System.nanoTime() - start) / 1000);
+        System.out.println("Tijdsduur (s): " + (System.nanoTime() - start) / 1000000000);
     }
 
     public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
-        List<Arc> arcs = original.arcs;
+        List<Arc> arcs = original.getArcs();
         int n = arcs.size();
 
         // Zoek tweede home game (arc.to == team)

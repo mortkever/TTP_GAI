@@ -276,8 +276,8 @@ public class ColumnGenerationHelper {
     public static void printTours(List<Tour> tours) {
         for (int t = 0; t < tours.size(); t++) {
             Tour tour = tours.get(t);
-            System.out.println("Team " + t + " Tour (cost: " + tour.cost + "):");
-            for (Arc arc : tour.arcs) {
+            System.out.println("Team " + t + " Tour (cost: " + tour.getCost() + "):");
+            for (Arc arc : tour.getArcs()) {
                 System.out.println("  " + arc);
             }
             System.out.println();
@@ -307,7 +307,7 @@ public class ColumnGenerationHelper {
 
             // the first arc: from="home location", to="location of first match"
             // => check the "to" location of the arc
-            for (Arc arc : tour.arcs) {
+            for (Arc arc : tour.getArcs()) {
                 int timeslot = arc.time;
                 if (timeslot < 0 || timeslot >= timeSlots) continue; // skip invalid and return-home timeslots
 
@@ -534,7 +534,7 @@ public class ColumnGenerationHelper {
                 master.addTour(t, superTours.get(t));
                 spg.addTour(t, superTours.get(t));
             }
-            System.out.println("Total cost of super column tours: " + superTours.stream().mapToDouble(tour -> tour.cost).sum());
+            System.out.println("Total cost of super column tours: " + superTours.stream().mapToDouble(tour -> tour.getCost()).sum());
         }
 
     }

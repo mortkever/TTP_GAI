@@ -15,16 +15,9 @@ public class TourRepository {
         }
     }
 
+    // Check of de tour al bestaat op het moment dat deze wordt aangemaakt! NIET bij
+    // het toevoegen
     public int addTour(int team, Tour tour) {
-        for (Tour existingtTour : teamTours.get(team)) {
-            if(existingtTour.equals(tour)) {
-                System.out.println("Tour already exists");
-                System.out.println("New: " + tour);
-                System.out.println("Existing: " + existingtTour + "\n");
-
-                return 1;
-            }
-        }
         teamTours.get(team).add(tour);
         return 0;
     }
