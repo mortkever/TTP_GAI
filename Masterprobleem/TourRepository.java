@@ -17,23 +17,12 @@ public class TourRepository {
 
     public int addTour(int team, Tour tour) {
         for (Tour existingtTour : teamTours.get(team)) {
-            if (existingtTour.cost == tour.cost) {
-                Boolean allSame = true;
-                for (int i = 0; i < tour.arcs.size(); i++) {
-                    if ((tour.arcs.get(i).from != existingtTour.arcs.get(i).from ||
-                            tour.arcs.get(i).to != existingtTour.arcs.get(i).to) &&
-                            tour.arcs.get(i).time == existingtTour.arcs.get(i).time) {
-                        allSame = false;
-                    }
-                }
-                if (allSame) {
+            if(existingtTour.equals(tour)) {
+                System.out.println("Tour already exists");
+                System.out.println("New: " + tour);
+                System.out.println("Existing: " + existingtTour + "\n");
 
-                    System.err.println("Tour already exists");
-                    System.err.println(tour);
-                    System.out.println(existingtTour);
-
-                    return 1;
-                }
+                return 1;
             }
         }
         teamTours.get(team).add(tour);

@@ -1,6 +1,7 @@
 package Masterprobleem.columnGen;
 
 import Masterprobleem.Arc;
+import Masterprobleem.ColumnGenerationHelper;
 import Masterprobleem.Tour;
 import Masterprobleem.TourRepository;
 

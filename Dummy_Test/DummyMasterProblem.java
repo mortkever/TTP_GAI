@@ -1,6 +1,6 @@
 package Dummy_Test;
 
-import Masterprobleem.columnGen.ColumnGenerationHelper;
+import Masterprobleem.ColumnGenerationHelper;
 import Utils.InputHandler;
 
 import com.gurobi.gurobi.*;

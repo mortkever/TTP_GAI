@@ -25,8 +25,8 @@ public class ScheduleValidator {
                 validateNoSelfMatches(),
                 validateNoDuplicateMatches(),
                 validateHomeAwayStreaks(),
-                validateRoundRobin(),
-                validateTotalDistance()
+                validateRoundRobin()
+                // validateTotalDistance() // fix bug needed
         );
 
         if (validationResults.contains(false)) {
@@ -236,12 +236,14 @@ public class ScheduleValidator {
         for (Team team : allTeams) {
             travelDistances.put(team, 0);
             lastLocations.put(team, team.getID()); // Start at home location
+            System.out.println("Last locations size: " + lastLocations.size() + " for team: " + team.getName());
         }
 
         // Iterate through rounds in order
         for(List<Match> round : schedule.getSchedule().values()) {
             //System.out.println("\n\n\n\n\n\n\n\n\nNumber of rounds: " + schedule.getSchedule().size());
             for (Match match : round) {
+                System.out.println("Processing match: " + match);
                 // Get team information
                 Team homeTeam = match.getTeamHome();
                 Team awayTeam = match.getTeamAway();

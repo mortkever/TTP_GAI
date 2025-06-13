@@ -3,6 +3,7 @@ package Masterprobleem;
 import com.gurobi.gurobi.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class CompactModel {
