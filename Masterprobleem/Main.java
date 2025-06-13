@@ -14,7 +14,8 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // ====================== Distance matrix =========================
-        
+        long start = System.nanoTime();
+
         String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
@@ -164,6 +165,8 @@ public class Main {
         } catch (GRBException e) {
             e.printStackTrace();
         }
+
+        System.out.println("Tijdsduur (µs): " + (System.nanoTime() - start) / 1000);
     }
 
     public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
