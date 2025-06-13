@@ -144,7 +144,8 @@ public class Main {
                      * }
                      */
                     int tours = 1;
-                    while (tour.arcs.size() > 0 && tours < 50) {
+                    // "tours < X" aanpassen naar hoeveel tours je per iteratie wilt toevoegen
+                    while (tour.arcs.size() > 0 && tours < 2) {
                         exisingTours += master.addTour(t, tour);
                         tour = spg.generateTour(t);
                         //System.out.println("tours:" + tours + " team " + t);

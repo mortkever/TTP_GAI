@@ -16,9 +16,15 @@ public class Masterproblem {
     private int[][] distanceMatrix;
     private HashMap<String, GRBVar> relaxedVarMap = new HashMap<>();
 
-    public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) {
+    public Masterproblem(TourRepository tourRepo, int[][] distanceMatrix) throws GRBException {
         this.tourRepo = tourRepo;
         this.distanceMatrix = distanceMatrix;
+
+        // Create environment ONCE
+        env = new GRBEnv(true);
+        env.set("logFile", "master.log");
+        env.set(GRB.IntParam.LogToConsole, 0);
+        env.start();
     }
 
     public int addTour(int team, Tour tour) {
@@ -30,10 +36,10 @@ public class Masterproblem {
         int numTeams = allTours.size();
         int numSlots = 2 * (numTeams - 1);
 
-        env = new GRBEnv(true);
-        env.set("logFile", "master.log");
-        env.set(GRB.IntParam.LogToConsole, 0);
-        env.start();
+        // Dispose previous model if it exists
+        if (model != null) {
+            model.dispose();
+        }
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();
 
