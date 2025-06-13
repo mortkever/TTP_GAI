@@ -86,14 +86,14 @@ public class ShortestPathGenerator {
             visits[k] = 0;
         }
         cgenHelper.resetCache(nTeams, timeSlots);
-        bestCost = Integer.MAX_VALUE;
+        bestCost = Double.MAX_VALUE;
         b = 0;
         bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0, 0);
         // times[team] = (System.nanoTime() - start) / 1000;
         // System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
         if (bestCost - cgenHelper.getMu(team) < 0) {
-            int realCost = 0;
+            Double realCost = 0.0;
             for (Arc arc : bestArcs) {
                 realCost += costs[arc.from][arc.to];
             }
@@ -247,9 +247,10 @@ public class ShortestPathGenerator {
 
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
         model.optimize();
+        bestCost = model.get(GRB.DoubleAttr.ObjVal);
 
         List<Arc> arcs = new ArrayList<>();
-        int totalCost = 0;
+        double totalCost = 0;
 
         for (int s = 0; s < timeSlots + 1; s++) {
             for (int i = 0; i < nTeams; i++) {
@@ -262,7 +263,14 @@ public class ShortestPathGenerator {
             }
         }
 
-        return new Tour(arcs, totalCost);
+        if (bestCost - cgenHelper.getMu(team) < 0) {
+            System.err.println(bestCost);
 
+            Tour tour = new Tour(arcs, totalCost);
+            existingTours.addTour(team, tour);
+            return tour;
+        } else {
+            return new Tour(new ArrayList<Arc>(), 0);
+        }
     }
 }
