@@ -91,6 +91,7 @@ public class ShortestPathGenerator {
         b = 0;
         bestArcs = new ArrayList<>();
         DFSrec(team, 0, team, 0, 0);
+        
         // times[team] = (System.nanoTime() - start) / 1000;
         // System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
         if (bestCost - cgenHelper.getMu(team) < 0) {

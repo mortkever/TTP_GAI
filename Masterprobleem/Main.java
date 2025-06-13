@@ -14,6 +14,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) throws Exception {
         // ====================== Distance matrix =========================
+        
         String fileName = "Data/Distances/NL6_distances.txt";
         // String fileName = "Data/Distances/NL16_distances.txt";
 
@@ -67,24 +68,25 @@ public class Main {
             }
         }
 
-        // ====================== Initieel vullen van MasterProblem =========================
+        // ====================== Initieel vullen van MasterProblem
+        // =========================
         // Different strategies:
         // 1. Add 1 compact formulation solution
         // 2. Add multiple compact formulation solutions
         // 3. Add super columns
         // 4. Add multiple super columns
         // 5. Add 1 solution of compact formulation and 1 solution of the super columns
-        int strategieInitiele = 4;
+        int strategieInitiele = 1;
 
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
 
         ShortestPathGenerator spg = ShortestPathGenerator.initializeSPG(
-                nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper
-        );
+                nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper);
 
         try {
-            ColumnGenerationHelper.addInitialSolution(strategieInitiele, master, spg, nTeams, timeSlots, distanceMatrix);
+            ColumnGenerationHelper.addInitialSolution(strategieInitiele, master, spg, nTeams, timeSlots,
+                    distanceMatrix);
         } catch (GRBException e) {
             e.printStackTrace();
             System.err.println("Failed to initialize master with initial strategy.");
@@ -125,7 +127,7 @@ public class Main {
                 // Extract Duals
                 relaxedModel_helper.setModel(relaxed);
                 relaxedModel_helper.extractDuals();
-                //relaxedModel_helper.printDuals();
+                // relaxedModel_helper.printDuals();
 
                 System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal));
 
@@ -134,15 +136,26 @@ public class Main {
                 for (int t = 0; t < nTeams; t++) {
                     Tour tour = spg.generateTour(t);
 
-                    if (tour.arcs.size() > 0) {
+                    /*
+                     * if (tour.arcs.size() > 0) {
+                     * exisingTours += master.addTour(t, tour);
+                     * } else {
+                     * optimalTours++;
+                     * }
+                     */
+                    int tours = 1;
+                    while (tour.arcs.size() > 0 && tours < 50) {
                         exisingTours += master.addTour(t, tour);
-                    } else {
-                        optimalTours++;
+                        tour = spg.generateTour(t);
+                        //System.out.println("tours:" + tours + " team " + t);
+                        tours++;
                     }
+                    if(tours == 1)
+                        optimalTours++;
                 }
 
                 counter++;
-                System.out.println(counter);
+                System.out.println("Iteratie: " + counter);
 
             } while (optimalTours < nTeams);
             master.printLambda(false);
@@ -197,21 +210,25 @@ public class Main {
     }
 
     public static boolean deepEquals(double[][][][] a, double[][][][] b) {
-        if (a.length != b.length) return false;
+        if (a.length != b.length)
+            return false;
         for (int i = 0; i < a.length; i++) {
-            if (a[i].length != b[i].length) return false;
+            if (a[i].length != b[i].length)
+                return false;
             for (int j = 0; j < a[i].length; j++) {
-                if (a[i][j].length != b[i][j].length) return false;
+                if (a[i][j].length != b[i][j].length)
+                    return false;
                 for (int k = 0; k < a[i][j].length; k++) {
-                    if (a[i][j][k].length != b[i][j][k].length) return false;
+                    if (a[i][j][k].length != b[i][j][k].length)
+                        return false;
                     for (int l = 0; l < a[i][j][k].length; l++) {
-                        if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0) return false;
+                        if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0)
+                            return false;
                     }
                 }
             }
         }
         return true;
     }
-
 
 }
