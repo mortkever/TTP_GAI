@@ -28,16 +28,23 @@ public class InputHandler {
             BufferedReader reader = new BufferedReader(new FileReader(fileName));
             String line;
 
+            int lineNumber = 0;
             while ((line = reader.readLine()) != null) {
-                // Split line by whitespace (tabs or spaces)
-                String[] values = line.trim().split("\\s+");
-                int[] row = new int[values.length];
+                lineNumber++;
+                try {
+                    String[] values = line.trim().split("\\s+");
+                    int[] row = new int[values.length];
 
-                for (int i = 0; i < values.length; i++) {
-                    row[i] = Integer.parseInt(values[i]);
+                    for (int i = 0; i < values.length; i++) {
+                        row[i] = Integer.parseInt(values[i]);
+                    }
+                    rows.add(row);
+                } catch (NumberFormatException e) {
+                    System.err.println("Error parsing number on line " + lineNumber + ": " + line);
+                    throw e;  // rethrow to stop execution if needed
                 }
-                rows.add(row);
             }
+
             reader.close();
 
             // Convert List to 2D Array
