@@ -257,4 +257,7 @@ public class Masterproblem {
         }
     }
 
+    public Map<Integer, HashMap<Tour, GRBVar>> getLambdaVars() {
+        return lambdaVars;
+    }
 }
