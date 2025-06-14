@@ -134,7 +134,7 @@ public class Main {
 
                 exisingTours = 0;
                 optimalTours = 0;
-                int maxNumber = 50000;
+                int maxNumber = 500;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateTour(t);
                     if (spg.tours.size() > 0) {
