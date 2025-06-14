@@ -29,4 +29,19 @@ public class TourRepository {
     public Map<Integer, List<Tour>> getAllTours() {
         return teamTours;
     }
+
+    public void pruneTours(int numberToKeep) {
+        for (List<Tour> tours : teamTours.values()) {
+            tours.sort(null);
+            System.out.println("-------------------");
+            System.out.println(tours.getFirst().getModCost());
+
+            while (tours.size() > numberToKeep) {
+                tours.removeFirst();
+            }
+            System.out.println(tours.getLast().getModCost());
+
+            System.out.println(tours.size());
+        }
+    }
 }

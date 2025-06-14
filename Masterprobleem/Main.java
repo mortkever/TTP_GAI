@@ -131,7 +131,7 @@ public class Main {
                 exisingTours = 0;
                 optimalTours = 0;
                 for (int t = 0; t < nTeams; t++) {
-                    spg.generateTour(t);
+                    spg.generateAllTours(t);
                     if (spg.tours.size() > 0) {
                         for (Tour tour : spg.tours) {
                             exisingTours += master.addTour(t, tour);
@@ -155,9 +155,11 @@ public class Main {
         System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
 
         System.out.println("Integer solution");
+        master.pruneTours(1000);
         master.buildConstraints();
 
         master.optimize();
+        master.printLambda(false);
         System.out.println("Obj: " + master.getModel().get(GRB.DoubleAttr.ObjVal));
 
     }

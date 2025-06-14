@@ -1,16 +1,22 @@
 package Masterprobleem;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Tour {
+public class Tour implements Comparable<Tour> {
     private List<Arc> arcs;
     private double realCost;
+    private double modCost;
 
     public Tour(List<Arc> arcs, double realCost) {
         this.arcs = arcs;
         this.realCost = realCost;
+    }
+
+    public Tour(List<Arc> arcs, double realCost, double modCost) {
+        this.arcs = arcs;
+        this.realCost = realCost;
+        this.modCost = modCost;
     }
 
     public Tour(List<Arc> arcs, int[][] distanceMatrix) {
@@ -34,6 +40,14 @@ public class Tour {
         this.realCost = realCost;
     }
 
+    public double getModCost() {
+        return modCost;
+    }
+
+    public void setModCost(Double modCost) {
+        this.modCost = modCost;
+    }
+
     public List<Arc> getArcs() {
         return arcs;
     }
@@ -42,7 +56,8 @@ public class Tour {
     public String toString() {
         return "Tour{" +
                 "arcs=" + arcs +
-                ", cost=" + realCost +
+                ", cost=" + realCost + 
+                ", mod cost=" + modCost +
                 '}';
     }
 
@@ -60,5 +75,12 @@ public class Tour {
     @Override
     public int hashCode() {
         return Objects.hash(arcs);
+    }
+
+    @Override
+    public int compareTo(Tour otherTour) {
+        int res = Double.compare(-1 * modCost, -1 * otherTour.modCost);
+        // System.out.println(res + " " + modCost +" " + otherTour.modCost);
+        return res;
     }
 }

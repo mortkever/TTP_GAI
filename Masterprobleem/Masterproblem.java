@@ -23,7 +23,7 @@ public class Masterproblem {
         // Create environment ONCE
         env = new GRBEnv(true);
         env.set("logFile", "master.log");
-        //env.set(GRB.IntParam.LogToConsole, 0);
+        env.set(GRB.IntParam.LogToConsole, 0);
         env.start();
     }
 
@@ -293,6 +293,10 @@ public class Masterproblem {
                 index++;
             }
         }
+    }
+
+    public void pruneTours(int numberToKeep) {
+        tourRepo.pruneTours(numberToKeep);
     }
 
 }

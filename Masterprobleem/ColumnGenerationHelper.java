@@ -412,7 +412,7 @@ public class ColumnGenerationHelper {
                     }
                 }
 
-                Tour tour = new Tour(arcs, totalCost);
+                Tour tour = new Tour(arcs, totalCost, -10000);
                 master.addTour(t, tour);
             }
         }

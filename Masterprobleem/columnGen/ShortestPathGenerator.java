@@ -83,7 +83,7 @@ public class ShortestPathGenerator {
         return true;
     }
 
-    public void generateTour(int team) {
+    public void generateAllTours(int team) {
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
@@ -91,19 +91,13 @@ public class ShortestPathGenerator {
         bestCost = Double.MAX_VALUE;
         b = 0;
         tours = new ArrayList<>();
-        DFSrec(team, 0, team, 0, 0, 0, new Stack<>());
+        DFSrecAll(team, 0, team, 0, 0, 0, new Stack<>());
 
         Iterator<Tour> iterator = tours.iterator();
         System.out.println(team + ": " + tours.size());
         while (iterator.hasNext()) {
             Tour tour = iterator.next();
 
-            double realCost = 0.0;
-            for (Arc arc : tour.getArcs()) {
-                realCost += costs[arc.from][arc.to];
-            }
-
-            tour.setRealCost(realCost);
             existingTours.addTour(team, tour);
         }
     }
@@ -112,7 +106,7 @@ public class ShortestPathGenerator {
         existingTours.addTour(team, tour);
     }
 
-    private void DFSrec(int team, int s, int from, double modCost, double tourCost, int layer, Stack<Arc> arcs) {
+    private void DFSrecAll(int team, int s, int from, double modCost, double tourCost, int layer, Stack<Arc> arcs) {
         for (int i = 0; i < nTeams; i++) {
             if (s == timeSlots && i != team)
                 continue;
@@ -126,10 +120,10 @@ public class ShortestPathGenerator {
                     double totalModCost = modCost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
                             - cgenHelper.getMu(team);
                     if (totalModCost < 0
-                            && isNotRedundantTour(team, tourCost)) {
+                            && isNotRedundantAllTours(team, tourCost)) {
                         bestCost = totalModCost;
                         ArrayList<Arc> tourArcs = new ArrayList<>(arcs);
-                        tours.add(new Tour(tourArcs, bestCost));
+                        tours.add(new Tour(tourArcs, tourCost, bestCost));
 
                         arcs.pop();
                         tourCost -= costs[from][i];
@@ -137,7 +131,7 @@ public class ShortestPathGenerator {
                     }
                 } else {
                     visits[i]++;
-                    DFSrec(team, s + 1, i,
+                    DFSrecAll(team, s + 1, i,
                             modCost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), tourCost,
                             layer + 1,
                             arcs);
@@ -164,7 +158,7 @@ public class ShortestPathGenerator {
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 
-    private boolean isNotRedundantTour(int team, double tourCost) {
+    private boolean isNotRedundantAllTours(int team, double tourCost) {
         // Alle tours overlopen
         List<Tour> tours = existingTours.getTours(team);
         for (Tour tour : tours) {
