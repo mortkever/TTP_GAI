@@ -109,6 +109,7 @@ public class Main {
             do {
                 long startCycle = System.nanoTime();
                 master.buildConstraints();
+                System.out.println("Tijdsduur constraints build (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
                 // Relax to LP for dual prices
                 GRBModel relaxed = master.getModel().relax();
@@ -152,6 +153,13 @@ public class Main {
         }
 
         System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
+
+        System.out.println("Integer solution");
+        master.buildConstraints();
+
+        master.optimize();
+        System.out.println("Obj: " + master.getModel().get(GRB.DoubleAttr.ObjVal));
+
     }
 
     public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {

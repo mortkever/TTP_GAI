@@ -94,6 +94,7 @@ public class ShortestPathGenerator {
         DFSrec(team, 0, team, 0, 0, 0, new Stack<>());
 
         Iterator<Tour> iterator = tours.iterator();
+        System.out.println(team + ": " + tours.size());
         while (iterator.hasNext()) {
             Tour tour = iterator.next();
 

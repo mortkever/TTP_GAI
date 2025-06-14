@@ -23,7 +23,7 @@ public class Masterproblem {
         // Create environment ONCE
         env = new GRBEnv(true);
         env.set("logFile", "master.log");
-        env.set(GRB.IntParam.LogToConsole, 0);
+        //env.set(GRB.IntParam.LogToConsole, 0);
         env.start();
     }
 
@@ -32,6 +32,9 @@ public class Masterproblem {
     }
 
     public void buildConstraints() throws GRBException {
+        long start = System.nanoTime();
+        System.out.println("Constraint building:");
+
         Map<Integer, List<Tour>> allTours = tourRepo.getAllTours();
         int numTeams = allTours.size();
         int numSlots = 2 * (numTeams - 1);
@@ -42,6 +45,8 @@ public class Masterproblem {
         }
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();
+        System.out.println("Setup (ms): " + (System.nanoTime() - start) / 1000000);
+        start = System.nanoTime();
 
         // 1. Maak lambda-variabelen
         for (Map.Entry<Integer, List<Tour>> entry : allTours.entrySet()) {
@@ -58,6 +63,8 @@ public class Masterproblem {
 
             lambdaVars.put(team, teamVars);
         }
+        System.out.println("Vars (ms): " + (System.nanoTime() - start) / 1000000);
+        start = System.nanoTime();
 
         // 2. Convexiteitsrestrictie/convexity (10): één tour per team
         for (Map.Entry<Integer, HashMap<Tour, GRBVar>> entry : lambdaVars.entrySet()) {
@@ -67,6 +74,8 @@ public class Masterproblem {
             }
             model.addConstr(expr, GRB.EQUAL, 1.0, "convexity_" + entry.getKey());
         }
+        System.out.println("C10 (ms): " + (System.nanoTime() - start) / 1000000);
+        start = System.nanoTime();
 
         // 3. coupling (9): teams om zelfde moment op zelfde locatie (voor een match)
         // For all loops
@@ -102,6 +111,8 @@ public class Masterproblem {
                 model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
         }
+        System.out.println("C9 (ms): " + (System.nanoTime() - start) / 1000000);
+        start = System.nanoTime();
 
         // Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
         // for all loop
@@ -133,29 +144,56 @@ public class Masterproblem {
                 }
             }
         }
+        System.out.println("C12 (ms): " + (System.nanoTime() - start) / 1000000);
+        start = System.nanoTime();
 
         model.update();
+        System.out.println("Done (ms): " + (System.nanoTime() - start) / 1000000);
+
     }
 
     private boolean couplingArcExist(Tour tour, int j, int s) {
         // Helper function for coupling constraint
-        for (Arc arc : tour.getArcs()) {
-            if (arc.to == j && arc.time == s) {
-                return true;
+        /*
+         * for (Arc arc : tour.getArcs()) {
+         * if (arc.to == j && arc.time == s) {
+         * return true;
+         * }
+         * }
+         */
+        Arc arc = tour.getArcs().get(s);
+        try {
+            if (arc.time != s) {
+                System.err.println("index != s");
+                throw new Exception("Tijd en index komen niet overeen");
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
+        if (arc.to == j)
+            return true;
 
         return false;
     }
 
     private boolean NRCArcExist(Tour tour, int t, int j, int s) {
         // Helper function for NRC constraint
-        for (Arc arc : tour.getArcs()) {
-            if (arc.from == t && arc.to == j && arc.time == s) {
-                return true;
-            } else if (arc.from == j && arc.to == t && arc.time == s) {
-                return true;
+        Arc arc = tour.getArcs().get(s);
+        try {
+            if (arc.time != s) {
+                System.err.println("index != s");
+                throw new Exception("Tijd en index komen niet overeen");
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        if (arc.from == t && arc.to == j) {
+            return true;
+        } else if (arc.from == j && arc.to == t) {
+            return true;
         }
 
         return false;
