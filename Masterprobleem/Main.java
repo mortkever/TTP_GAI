@@ -77,7 +77,7 @@ public class Main {
         // 3. Add super columns
         // 4. Add multiple super columns
         // 5. Add 1 solution of compact formulation and 1 solution of the super columns
-        int strategieInitiele = 3;
+        int strategieInitiele = 4;
 
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
@@ -134,7 +134,7 @@ public class Main {
 
                 exisingTours = 0;
                 optimalTours = 0;
-                int maxNumber = 50000;
+                int maxNumber = 500;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateTour(t);
                     if (spg.tours.size() > 0) {
