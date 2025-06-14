@@ -107,21 +107,13 @@ public class Main {
             relaxedModel_helper.setRandCost(false);
 
             do {
+                long startCycle = System.nanoTime();
                 master.buildConstraints();
 
                 // Relax to LP for dual prices
                 GRBModel relaxed = master.getModel().relax();
                 relaxed.optimize();
                 master.setRelaxedModel(relaxed);
-
-                // Check variable values with tolerance
-                for (GRBVar var : relaxed.getVars()) {
-                    double value = var.get(GRB.DoubleAttr.X);
-                    if (value < 1 - 1e-6 && value > 0 + 1e-6) {
-                        relaxedModel_helper.setRandCost(false);
-                        isfrac = true;
-                    }
-                }
 
                 // master.printLambda(false);
 
@@ -132,14 +124,14 @@ public class Main {
 
                 System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal));
 
+                System.out.println("Tijdsduur master (ms): " + (System.nanoTime() - startCycle) / 1000000);
+
+
                 exisingTours = 0;
                 optimalTours = 0;
-                int maxNumber = 50000;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateTour(t);
                     if (spg.tours.size() > 0) {
-                        while (spg.tours.size() > maxNumber)
-                            spg.tours.poll();
                         for (Tour tour : spg.tours) {
                             exisingTours += master.addTour(t, tour);
                         }
@@ -150,6 +142,7 @@ public class Main {
 
                 counter++;
                 System.out.println("Iteratie: " + counter);
+                System.out.println("Tijdsduur (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
             } while (optimalTours < nTeams);
             master.printLambda(false);
@@ -158,7 +151,7 @@ public class Main {
             e.printStackTrace();
         }
 
-        System.out.println("Tijdsduur (s): " + (System.nanoTime() - start) / 1000000000);
+        System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
     }
 
     public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {

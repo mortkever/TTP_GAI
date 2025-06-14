@@ -52,7 +52,7 @@ public class Masterproblem {
             for (int p = 0; p < teamTours.size(); p++) {
                 Tour tour = teamTours.get(p);
                 // System.out.println("\nTour cost: " + tour.cost);
-                GRBVar var = model.addVar(0.0, 1.0, tour.getCost(), GRB.BINARY, "lambda_" + team + "_" + p);
+                GRBVar var = model.addVar(0.0, 1.0, tour.getRealCost(), GRB.BINARY, "lambda_" + team + "_" + p);
                 teamVars.put(tour, var);
             }
 

@@ -276,7 +276,7 @@ public class ColumnGenerationHelper {
     public static void printTours(List<Tour> tours) {
         for (int t = 0; t < tours.size(); t++) {
             Tour tour = tours.get(t);
-            System.out.println("Team " + t + " Tour (cost: " + tour.getCost() + "):");
+            System.out.println("Team " + t + " Tour (cost: " + tour.getRealCost() + "):");
             for (Arc arc : tour.getArcs()) {
                 System.out.println("  " + arc);
             }
@@ -534,7 +534,7 @@ public class ColumnGenerationHelper {
                 master.addTour(t, superTours.get(t));
                 spg.addTour(t, superTours.get(t));
             }
-            System.out.println("Total cost of super column tours: " + superTours.stream().mapToDouble(tour -> tour.getCost()).sum());
+            System.out.println("Total cost of super column tours: " + superTours.stream().mapToDouble(tour -> tour.getRealCost()).sum());
         }
 
     }

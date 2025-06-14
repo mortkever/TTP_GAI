@@ -4,18 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Tour implements Comparable<Tour> {
+public class Tour {
     private List<Arc> arcs;
-    private double cost;
+    private double realCost;
 
-    public Tour(List<Arc> arcs, double cost) {
+    public Tour(List<Arc> arcs, double realCost) {
         this.arcs = arcs;
-        this.cost = cost;
+        this.realCost = realCost;
     }
 
     public Tour(List<Arc> arcs, int[][] distanceMatrix) {
         this.arcs = arcs;
-        this.cost = calculateCost(arcs, distanceMatrix);
+        this.realCost = calculateCost(arcs, distanceMatrix);
     }
 
     private double calculateCost(List<Arc> arcs, int[][] distanceMatrix) {
@@ -26,12 +26,12 @@ public class Tour implements Comparable<Tour> {
         return totalCost;
     }
 
-    public double getCost() {
-        return cost;
+    public double getRealCost() {
+        return realCost;
     }
 
-    public void setCost(Double realCost) {
-        cost = realCost;
+    public void setRealCost(Double realCost) {
+        this.realCost = realCost;
     }
 
     public List<Arc> getArcs() {
@@ -42,7 +42,7 @@ public class Tour implements Comparable<Tour> {
     public String toString() {
         return "Tour{" +
                 "arcs=" + arcs +
-                ", cost=" + cost +
+                ", cost=" + realCost +
                 '}';
     }
 
@@ -53,19 +53,12 @@ public class Tour implements Comparable<Tour> {
         if (o == null || getClass() != o.getClass())
             return false;
         Tour tour = (Tour) o;
-        return this.getArcs().equals(tour.getArcs()) && this.getCost() == tour.getCost(); // assumes arcs are in the
-                                                                                          // same order
+        return this.getArcs().equals(tour.getArcs()); // && this.getCost() == tour.getCost(); // assumes arcs are in the
+                                                      // same order
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(arcs);
-    }
-
-    @Override
-    public int compareTo(Tour otherTour) {
-        int res = Double.compare(-1 * cost, -1 * otherTour.cost);
-        // System.out.println(res + " " + cost +" " + otherTour.cost);
-        return res;
     }
 }
