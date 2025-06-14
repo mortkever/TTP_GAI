@@ -77,7 +77,7 @@ public class Main {
         // 3. Add super columns
         // 4. Add multiple super columns
         // 5. Add 1 solution of compact formulation and 1 solution of the super columns
-        int strategieInitiele = 3;
+        int strategieInitiele = 4;
 
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
