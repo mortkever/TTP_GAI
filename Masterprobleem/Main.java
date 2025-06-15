@@ -267,7 +267,7 @@ public class Main {
 
         Map<String, Object> runData = new LinkedHashMap<>();
         runData.put("input", inputLabel);
-        runData.put("columnsPerIter", maxNumber);
+        //runData.put("columnsPerIter", maxNumber);
         runData.put("aantalIteraties", aantalIteraties);
         runData.put("aantalKolommen", aantalKolommen);
         runData.put("LPsolution:", LPsolution);
@@ -279,7 +279,7 @@ public class Main {
         results.add(runData);
 
         // Save results to JSONL file
-        String jsonlFileName = "output_files/Master_problem/" + inputLabel + "-" + maxNumber + "kol-info.jsonl";
+        String jsonlFileName = "output_files/Master_problem/" + inputLabel + "-" + "procent-info.jsonl";
         writeResultsToJsonl(jsonlFileName, results, append);
         System.out.println("Benchmarking complete. Results written to " + jsonlFileName);
     }
@@ -323,7 +323,7 @@ public class Main {
         } catch (IOException e) {
             System.err.println("Error writing to JSONL file: " + e.getMessage());
         }
-        System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
 
     }
 
