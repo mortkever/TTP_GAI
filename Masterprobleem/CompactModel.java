@@ -136,6 +136,23 @@ public class CompactModel {
         model.optimize();
     }
 
+    public GRBVar[][][][] getOptimalSolution() {
+        try {
+            model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
+            model.optimize();
+
+            if (model.get(GRB.IntAttr.Status) == GRB.OPTIMAL) {
+                return x;
+            } else {
+                System.out.println("No optimal solution found.");
+                return null;
+            }
+        } catch (GRBException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public GRBVar[][][][] getFirstSolution() throws GRBException {
         model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
         model.set(GRB.IntParam.SolutionLimit, 1);

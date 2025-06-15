@@ -9,16 +9,40 @@ import Utils.InputHandler;
 import Utils.OutputHandeler;
 import Utils.PrintHandler;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        // Initialize timing variables
+        long fullStart = 0;
+        long fullEnd = 0;
+        long initialStart = 0;
+        long initialEnd = 0;
+        long columnGenStart = 0;
+        long columnGenEnd = 0;
+        long ipSolutionStart = 0;
+        long ipSolutionEnd = 0;
+
+        // Other initialization
+        fullStart = System.nanoTime();
+
+        String inputLabel = "NL6"; // e.g., NL4, NL6, NL8
+        String fileName = "Data/Distances/" + inputLabel + "_distances.txt";
+        boolean append = true; // false = overwrite, true = append
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        int strategieInitiele = 0;
+        int maxNumber = 5000;
+        double LPsolution = 0.0;
+        double IPsolution = 0.0;
+        int aantalIteraties = 0;
+        int aantalKolommen = 0;
+
+
         // ====================== Distance matrix =========================
-        long start = System.nanoTime();
-
-        String fileName = "Data/Distances/NL6_distances.txt";
-        // String fileName = "Data/Distances/NL16_distances.txt";
-
         InputHandler inputHandler = new InputHandler(fileName);
         int[][] distanceMatrix = inputHandler.getDistanceMatrix();
         int nTeams = distanceMatrix.length;
@@ -77,7 +101,7 @@ public class Main {
         // 3. Add super columns
         // 4. Add multiple super columns
         // 5. Add 1 solution of compact formulation and 1 solution of the super columns
-        int strategieInitiele = 4;
+        strategieInitiele = 4;
 
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
@@ -86,8 +110,10 @@ public class Main {
                 nTeams, 3, timeSlots, distanceMatrix, relaxedModel_helper);
 
         try {
+            initialStart = System.nanoTime();
             ColumnGenerationHelper.addInitialSolution(strategieInitiele, master, spg, nTeams, timeSlots,
                     distanceMatrix);
+            initialEnd = System.nanoTime();
         } catch (GRBException e) {
             e.printStackTrace();
             System.err.println("Failed to initialize master with initial strategy.");
@@ -107,6 +133,7 @@ public class Main {
             relaxedModel_helper.setRandCost(false);
 
             do {
+                columnGenStart = System.nanoTime();
                 master.buildConstraints();
 
                 // Relax to LP for dual prices
@@ -130,11 +157,12 @@ public class Main {
                 relaxedModel_helper.extractDuals();
                 // relaxedModel_helper.printDuals();
 
-                System.out.println("Obj: " + relaxed.get(GRB.DoubleAttr.ObjVal));
+                LPsolution = relaxed.get(GRB.DoubleAttr.ObjVal);
+                System.out.println("Obj: " + LPsolution);
 
                 exisingTours = 0;
                 optimalTours = 0;
-                int maxNumber = 500;
+                //maxNumber = 1;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateTour(t);
                     if (spg.tours.size() > 0) {
@@ -152,6 +180,11 @@ public class Main {
                 System.out.println("Iteratie: " + counter);
 
             } while (optimalTours < nTeams);
+            columnGenEnd = System.nanoTime();
+            aantalIteraties = counter;
+            for (HashMap<Tour, GRBVar> innerMap : master.getLambdaVars().values()) {
+                aantalKolommen += innerMap.size();
+            }
             master.printLambda(false);
 
             Map<Integer, HashMap<Tour, GRBVar>> lambdaVars = master.getLambdaVars();
@@ -182,25 +215,28 @@ public class Main {
                 }
             }
 
-
-
             System.out.println("\n\n-------------------------------");
             System.out.println("Masterprobleem eind LP model:");
             System.out.println("Optimal tours: " + optimalTours);
             System.out.println("Existing tours: " + exisingTours);
+            System.out.println("Total number of columns: " + aantalKolommen);
 
             System.out.println("\n\n-------------------------------");
-            master.getModel().set(GRB.DoubleParam.MIPGap, 0.01);
+            ipSolutionStart = System.nanoTime();
+            master.getModel().set(GRB.DoubleParam.MIPGap, 0.00);
             master.getModel().set(GRB.IntParam.MIPFocus, 1);
 
             master.getModel().set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
             master.getModel().optimize();
 
+            ipSolutionEnd = System.nanoTime();
+
             int status = master.getModel().get(GRB.IntAttr.Status);
 
             if(status == GRB.Status.OPTIMAL) {
                 System.out.println("Optimal solution found");
-                System.out.println("Total cost: " + master.getModel().get(GRB.DoubleAttr.ObjVal));
+                IPsolution = master.getModel().get(GRB.DoubleAttr.ObjVal);
+                System.out.println("Total cost: " + IPsolution);
 
                 System.out.println("\n🟢 Geselecteerde tours in de optimale oplossing:");
 
@@ -226,7 +262,76 @@ public class Main {
             e.printStackTrace();
         }
 
-        System.out.println("Tijdsduur (s): " + (System.nanoTime() - start) / 1000000000);
+        fullEnd = System.nanoTime();
+        String elapsedInitial = formatDuration(initialEnd - initialStart);
+        String elapsedColumnGen = formatDuration(columnGenEnd - columnGenStart);
+        String elapsedIpSolution = formatDuration(ipSolutionEnd - ipSolutionStart);
+        String elapsedFull = formatDuration(fullEnd - fullStart);
+
+        //System.out.println("\n\nTijden statistieken:");
+        //System.out.println("Initiele oplossing: " + elapsedInitial);
+        //System.out.println("Column gen: " + elapsedColumnGen);
+        //System.out.println("Ip oplossing: " + elapsedIpSolution);
+        //System.out.println("Full program: " + elapsedFull);
+
+        Map<String, Object> runData = new LinkedHashMap<>();
+        runData.put("input", inputLabel);
+        runData.put("columnsPerIter", maxNumber);
+        runData.put("aantalIteraties", aantalIteraties);
+        runData.put("aantalKolommen", aantalKolommen);
+        runData.put("LPsolution:", LPsolution);
+        runData.put("IPsolution", IPsolution);
+        runData.put("elapsedFull", elapsedFull);
+        runData.put("elapsedInitial", elapsedInitial);
+        runData.put("elapsedColumnGen", elapsedColumnGen);
+        runData.put("elapsedIpSolution", elapsedIpSolution);
+        results.add(runData);
+
+        // Save results to JSONL file
+        String jsonlFileName = "output_files/Master_problem/" + inputLabel + "-" + maxNumber + "kol-info.jsonl";
+        writeResultsToJsonl(jsonlFileName, results, append);
+        System.out.println("Benchmarking complete. Results written to " + jsonlFileName);
+    }
+
+
+    // Help functions for formatting and extracting durations
+    // Convert nanoseconds to human-readable string
+    public static String formatDuration(long nanos) {
+        long micros = (nanos / 1_000) % 1_000;
+        long millis = (nanos / 1_000_000) % 1_000;
+        long seconds = (nanos / 1_000_000_000) % 60;
+        long minutes = (nanos / (60L * 1_000_000_000)) % 60;
+        long hours = nanos / (60L * 60L * 1_000_000_000);
+
+        return String.format("%02dh %02dm %02ds %03dms %03dµs",
+                hours, minutes, seconds, millis, micros);
+    }
+
+    // Converts a Map to a compact JSON string (basic implementation)
+    public static String mapToJson(Map<String, Object> map) {
+        StringBuilder sb = new StringBuilder("{");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            sb.append("\"").append(entry.getKey()).append("\": ");
+            if (entry.getValue() instanceof Number) {
+                sb.append(entry.getValue());
+            } else {
+                sb.append("\"").append(entry.getValue()).append("\"");
+            }
+            sb.append(", ");
+        }
+        if (!map.isEmpty()) sb.setLength(sb.length() - 2); // Remove trailing comma
+        sb.append("}");
+        return sb.toString();
+    }
+
+    public static void writeResultsToJsonl(String filename, List<Map<String, Object>> results, boolean append) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename, append))) {
+            for (Map<String, Object> result : results) {
+                writer.println(mapToJson(result));
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing to JSONL file: " + e.getMessage());
+        }
     }
 
 

@@ -1,0 +1,21 @@
+long fullStart = System.nanoTime();
+long initialStart = System.nanoTime();
+long initialEnd = System.nanoTime();
+long columnGenStart = System.nanoTime();
+long columnGenEnd = System.nanoTime();
+long ipSolutionStart = System.nanoTime();
+long ipSolutionEnd = System.nanoTime();
+long fullEnd = System.nanoTime();
+
+
+NL4-1kol-info.jsonl: 00h 00m 00s 004ms 869µs (4869020 ns)
+NL4-50000kol-info.jsonl: 00h 00m 00s 007ms 761µs (7761840 ns)
+NL4-5000kol-info.jsonl: 00h 00m 00s 007ms 470µs (7470840 ns)
+NL4-500kol-info.jsonl: 00h 00m 00s 007ms 413µs (7413080 ns)
+NL4-50kol-info.jsonl: 00h 00m 00s 006ms 568µs (6568700 ns)
+NL4-5kol-info.jsonl: 00h 00m 00s 005ms 998µs (5998500 ns)
+
+
+NL6-1kol-info.jsonl: 00h 00m 03s 714ms 275µs (3714275000 ns)
+NL6-50kol-info.jsonl: 00h 00m 00s 260ms 092µs (260092000 ns)
+NL6-5kol-info.jsonl: 00h 00m 01s 487ms 911µs (1487911000 ns)
