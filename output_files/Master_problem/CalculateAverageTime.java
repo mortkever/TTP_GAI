@@ -6,48 +6,67 @@ import java.util.*;
 import java.util.regex.*;
 
 public class CalculateAverageTime {
+
+    private static final String[] FIELDS_TO_ANALYZE = {
+            "columnsPerIter",
+            "percentPerIter",
+            "aantalIteraties",
+            "aantalKolommen",
+            "LPsolution:",
+            "IPsolution",
+            "elapsedFull",
+            "elapsedInitial",
+            "elapsedColumnGen",
+            "elapsedIpSolution"
+    };
+
     public static void main(String[] args) {
         Path folder = Paths.get("output_files/Master_problem");
 
         try {
             Files.list(folder)
                     .filter(path -> path.toString().endsWith(".jsonl"))
-                    .sorted()
+                    .sorted(Comparator.comparing(Path::toString, CalculateAverageTime.naturalComparator()))
                     .forEach(path -> {
-                        List<Long> columnGenDurations = new ArrayList<>();
-                        List<Long> fullDurations = new ArrayList<>();
+                        Map<String, List<Double>> numericValues = new LinkedHashMap<>();
+                        Map<String, List<Long>> timeValues = new LinkedHashMap<>();
+                        for (String field : FIELDS_TO_ANALYZE) {
+                            numericValues.put(field, new ArrayList<>());
+                            timeValues.put(field, new ArrayList<>());
+                        }
 
                         try (BufferedReader reader = Files.newBufferedReader(path)) {
                             String line;
                             while ((line = reader.readLine()) != null) {
-                                long colGenNs = extractElapsedNs(line, "elapsedColumnGen");
-                                long fullNs = extractElapsedNs(line, "elapsedFull");
-
-                                if (colGenNs > 0) columnGenDurations.add(colGenNs);
-                                if (fullNs > 0) fullDurations.add(fullNs);
+                                for (String field : FIELDS_TO_ANALYZE) {
+                                    if (line.contains("\"" + field + "\"")) {
+                                        if (line.contains("h") && line.contains("ms") && line.contains("µs")) {
+                                            long ns = extractElapsedNs(line, field);
+                                            if (ns >= 0) timeValues.get(field).add(ns);
+                                        } else {
+                                            Double number = extractNumericValue(line, field);
+                                            if (number != null) numericValues.get(field).add(number);
+                                        }
+                                    }
+                                }
                             }
                         } catch (IOException e) {
                             System.err.println("Error reading file " + path + ": " + e.getMessage());
                             return;
                         }
 
-                        String fileName = path.getFileName().toString();
-                        System.out.println("======== " + fileName + " ========");
-
-                        if (!columnGenDurations.isEmpty()) {
-                            long avgColGen = columnGenDurations.stream().mapToLong(Long::longValue).sum() / columnGenDurations.size();
-                            System.out.println("Column Generation avg: " + formatDuration(avgColGen) + " (" + avgColGen + " ns)");
-                        } else {
-                            System.out.println("Column Generation avg: no data");
+                        System.out.println("======== " + path.getFileName() + " ========");
+                        for (String field : FIELDS_TO_ANALYZE) {
+                            if (!timeValues.get(field).isEmpty()) {
+                                long avgNs = timeValues.get(field).stream().mapToLong(Long::longValue).sum() / timeValues.get(field).size();
+                                System.out.printf("%-20s: %s (%d ns)%n", field, formatDuration(avgNs), avgNs);
+                            } else if (!numericValues.get(field).isEmpty()) {
+                                double avg = numericValues.get(field).stream().mapToDouble(Double::doubleValue).average().orElse(0);
+                                System.out.printf("%-20s: %.3f%n", field, avg);
+                            } else {
+                                System.out.printf("%-20s: no data%n", field);
+                            }
                         }
-
-                        if (!fullDurations.isEmpty()) {
-                            long avgFull = fullDurations.stream().mapToLong(Long::longValue).sum() / fullDurations.size();
-                            System.out.println("Full Runtime avg:       " + formatDuration(avgFull) + " (" + avgFull + " ns)");
-                        } else {
-                            System.out.println("Full Runtime avg: no data");
-                        }
-
                         System.out.println();
                     });
 
@@ -56,7 +75,6 @@ public class CalculateAverageTime {
         }
     }
 
-    // Extracts nanoseconds from a duration field like "elapsedColumnGen" or "elapsedFull"
     private static long extractElapsedNs(String line, String fieldName) {
         String regex = "\"" + Pattern.quote(fieldName) + "\"\\s*:\\s*\"(\\d{2})h (\\d{2})m (\\d{2})s (\\d{3})ms (\\d{3})µs\"";
         Matcher matcher = Pattern.compile(regex).matcher(line);
@@ -76,7 +94,19 @@ public class CalculateAverageTime {
         return -1;
     }
 
-    // Converts nanoseconds into a formatted string
+    private static Double extractNumericValue(String line, String field) {
+        String regex = "\"" + Pattern.quote(field) + "\"\\s*:\\s*([\\d\\.E+-]+)";
+        Matcher matcher = Pattern.compile(regex).matcher(line);
+        if (matcher.find()) {
+            try {
+                return Double.parseDouble(matcher.group(1));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     private static String formatDuration(long nanos) {
         long micros = (nanos / 1_000) % 1_000;
         long millis = (nanos / 1_000_000) % 1_000;
@@ -86,5 +116,42 @@ public class CalculateAverageTime {
 
         return String.format("%02dh %02dm %02ds %03dms %03dµs",
                 hours, minutes, seconds, millis, micros);
+    }
+
+    public static Comparator<String> naturalComparator() {
+        return (s1, s2) -> {
+            List<Object> k1 = extractNaturalKey(s1);
+            List<Object> k2 = extractNaturalKey(s2);
+
+            int len = Math.min(k1.size(), k2.size());
+            for (int i = 0; i < len; i++) {
+                Object o1 = k1.get(i);
+                Object o2 = k2.get(i);
+
+                int result;
+                if (o1 instanceof Integer && o2 instanceof Integer) {
+                    result = Integer.compare((Integer) o1, (Integer) o2);
+                } else {
+                    result = o1.toString().compareTo(o2.toString());
+                }
+
+                if (result != 0) return result;
+            }
+
+            return Integer.compare(k1.size(), k2.size());
+        };
+    }
+
+    private static List<Object> extractNaturalKey(String s) {
+        List<Object> key = new ArrayList<>();
+        Matcher m = Pattern.compile("(\\d+)|(\\D+)").matcher(s);
+        while (m.find()) {
+            if (m.group(1) != null) {
+                key.add(Integer.parseInt(m.group(1)));
+            } else {
+                key.add(m.group(2));
+            }
+        }
+        return key;
     }
 }

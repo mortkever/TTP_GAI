@@ -33,7 +33,7 @@ public class Masterproblem {
 
     public void buildConstraints() throws GRBException {
         long start = System.nanoTime();
-        System.out.println("Constraint building:");
+        //System.out.println("Constraint building:");
 
         Map<Integer, List<Tour>> allTours = tourRepo.getAllTours();
         int numTeams = allTours.size();
@@ -45,7 +45,7 @@ public class Masterproblem {
         }
         model = new GRBModel(env);
         lambdaVars = new HashMap<>();
-        System.out.println("Setup (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("Setup (ms): " + (System.nanoTime() - start) / 1000000);
         start = System.nanoTime();
 
         // 1. Maak lambda-variabelen
@@ -63,7 +63,7 @@ public class Masterproblem {
 
             lambdaVars.put(team, teamVars);
         }
-        System.out.println("Vars (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("Vars (ms): " + (System.nanoTime() - start) / 1000000);
         start = System.nanoTime();
 
         // 2. Convexiteitsrestrictie/convexity (10): één tour per team
@@ -74,7 +74,7 @@ public class Masterproblem {
             }
             model.addConstr(expr, GRB.EQUAL, 1.0, "convexity_" + entry.getKey());
         }
-        System.out.println("C10 (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("C10 (ms): " + (System.nanoTime() - start) / 1000000);
         start = System.nanoTime();
 
         // 3. coupling (9): teams om zelfde moment op zelfde locatie (voor een match)
@@ -111,7 +111,7 @@ public class Masterproblem {
                 model.addConstr(expr, GRB.EQUAL, 1.0, "coupling_" + key);
             }
         }
-        System.out.println("C9 (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("C9 (ms): " + (System.nanoTime() - start) / 1000000);
         start = System.nanoTime();
 
         // Constraint (12): NRC – geen heen-en-terug onmiddellijk na elkaar
@@ -144,11 +144,11 @@ public class Masterproblem {
                 }
             }
         }
-        System.out.println("C12 (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("C12 (ms): " + (System.nanoTime() - start) / 1000000);
         start = System.nanoTime();
 
         model.update();
-        System.out.println("Done (ms): " + (System.nanoTime() - start) / 1000000);
+        //System.out.println("Done (ms): " + (System.nanoTime() - start) / 1000000);
 
     }
 

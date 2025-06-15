@@ -1,0 +1,1 @@
+{"input": "NL6", "percentPerIter": 0.5, "aantalIteraties": 5, "aantalKolommen": 38739, "LPsolution:": 22564.50000000001, "IPsolution": 23916.0, "elapsedFull": "00h 28m 13s 423ms 131µs", "elapsedInitial": "00h 00m 00s 016ms 452µs", "elapsedColumnGen": "00h 00m 00s 857ms 204µs", "elapsedIpSolution": "00h 28m 09s 788ms 641µs"}

@@ -36,6 +36,7 @@ public class Main {
 
         int strategieInitiele = 0;
         //int maxNumber = 5000;
+        double maxNumber = 0.5;
         double LPsolution = 0.0;
         double IPsolution = 0.0;
         int aantalIteraties = 0;
@@ -130,11 +131,12 @@ public class Main {
             int optimalTours = 0;
             relaxedModel_helper.setRandCost(false);
 
+            columnGenStart = System.nanoTime();
             do {
-                columnGenStart = System.nanoTime();
+
                 long startCycle = System.nanoTime();
                 master.buildConstraints();
-                System.out.println("Tijdsduur constraints build (ms): " + (System.nanoTime() - startCycle) / 1000000);
+                //System.out.println("Tijdsduur constraints build (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
                 // Relax to LP for dual prices
                 GRBModel relaxed = master.getModel().relax();
@@ -149,14 +151,14 @@ public class Main {
                 // relaxedModel_helper.printDuals();
 
                 LPsolution = relaxed.get(GRB.DoubleAttr.ObjVal);
-                System.out.println("Obj: " + LPsolution);
+                //System.out.println("Obj: " + LPsolution);
 
-                System.out.println("Tijdsduur master (ms): " + (System.nanoTime() - startCycle) / 1000000);
+                //System.out.println("Tijdsduur master (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
                 exisingTours = 0;
                 optimalTours = 0;
                 //maxNumber = 1;
-                double maxNumber = 0.12;
+                //maxNumber = 0.12;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateAllTours(t, maxNumber);
                     if (spg.tours.size() > 0) {
@@ -170,7 +172,7 @@ public class Main {
 
                 counter++;
                 System.out.println("Iteratie: " + counter);
-                System.out.println("Tijdsduur (ms): " + (System.nanoTime() - startCycle) / 1000000);
+                //System.out.println("Tijdsduur (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
             } while (optimalTours < nTeams);
             columnGenEnd = System.nanoTime();
@@ -233,17 +235,17 @@ public class Main {
 
                 System.out.println("\n🟢 Geselecteerde tours in de optimale oplossing:");
 
-                for (Map.Entry<Integer, HashMap<Tour, GRBVar>> entry : lambdaVars.entrySet()) {
-                    int team = entry.getKey();
-                    for (Map.Entry<Tour, GRBVar> tourEntry : entry.getValue().entrySet()) {
-                        double val = tourEntry.getValue().get(GRB.DoubleAttr.X);
-                        if (val > 0.5) {
-                            System.out.println("Team " + team + ": " + tourEntry.getKey() + " " + val);
-                            break; // er is maar 1 tour geselecteerd per team
-                        }
-                    }
-
-                }
+//                for (Map.Entry<Integer, HashMap<Tour, GRBVar>> entry : lambdaVars.entrySet()) {
+//                    int team = entry.getKey();
+//                    for (Map.Entry<Tour, GRBVar> tourEntry : entry.getValue().entrySet()) {
+//                        double val = tourEntry.getValue().get(GRB.DoubleAttr.X);
+//                        if (val > 0.5) {
+//                            System.out.println("Team " + team + ": " + tourEntry.getKey() + " " + val);
+//                            break; // er is maar 1 tour geselecteerd per team
+//                        }
+//                    }
+//
+//                }
 
             } else {
                 System.out.println("No optimal solution found");
@@ -267,7 +269,7 @@ public class Main {
 
         Map<String, Object> runData = new LinkedHashMap<>();
         runData.put("input", inputLabel);
-        //runData.put("columnsPerIter", maxNumber);
+        runData.put("percentPerIter", maxNumber);
         runData.put("aantalIteraties", aantalIteraties);
         runData.put("aantalKolommen", aantalKolommen);
         runData.put("LPsolution:", LPsolution);
@@ -279,7 +281,7 @@ public class Main {
         results.add(runData);
 
         // Save results to JSONL file
-        String jsonlFileName = "output_files/Master_problem/" + inputLabel + "-" + "procent-info.jsonl";
+        String jsonlFileName = "output_files/Master_problem/updated_column/" + inputLabel + "-" + (maxNumber*100) + "procent-info_updated.jsonl";
         writeResultsToJsonl(jsonlFileName, results, append);
         System.out.println("Benchmarking complete. Results written to " + jsonlFileName);
     }
