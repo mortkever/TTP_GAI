@@ -35,7 +35,7 @@ public class Main {
         List<Map<String, Object>> results = new ArrayList<>();
 
         int strategieInitiele = 0;
-        int maxNumber = 5000;
+        //int maxNumber = 5000;
         double LPsolution = 0.0;
         double IPsolution = 0.0;
         int aantalIteraties = 0;
@@ -125,30 +125,21 @@ public class Main {
             System.out.println("Masterprobleem start:");
 
             // Extract dual prices
-            double prevVal = Double.MAX_VALUE;
             int counter = 0;
             int exisingTours = 0;
             int optimalTours = 0;
-            boolean isfrac = false;
             relaxedModel_helper.setRandCost(false);
 
             do {
                 columnGenStart = System.nanoTime();
+                long startCycle = System.nanoTime();
                 master.buildConstraints();
+                System.out.println("Tijdsduur constraints build (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
                 // Relax to LP for dual prices
                 GRBModel relaxed = master.getModel().relax();
                 relaxed.optimize();
                 master.setRelaxedModel(relaxed);
-
-                // Check variable values with tolerance
-                for (GRBVar var : relaxed.getVars()) {
-                    double value = var.get(GRB.DoubleAttr.X);
-                    if (value < 1 - 1e-6 && value > 0 + 1e-6) {
-                        relaxedModel_helper.setRandCost(false);
-                        isfrac = true;
-                    }
-                }
 
                 // master.printLambda(false);
 
@@ -160,14 +151,15 @@ public class Main {
                 LPsolution = relaxed.get(GRB.DoubleAttr.ObjVal);
                 System.out.println("Obj: " + LPsolution);
 
+                System.out.println("Tijdsduur master (ms): " + (System.nanoTime() - startCycle) / 1000000);
+
                 exisingTours = 0;
                 optimalTours = 0;
                 //maxNumber = 1;
+                double maxNumber = 0.12;
                 for (int t = 0; t < nTeams; t++) {
-                    spg.generateTour(t);
+                    spg.generateAllTours(t, maxNumber);
                     if (spg.tours.size() > 0) {
-                        while (spg.tours.size() > maxNumber)
-                            spg.tours.poll();
                         for (Tour tour : spg.tours) {
                             exisingTours += master.addTour(t, tour);
                         }
@@ -178,6 +170,7 @@ public class Main {
 
                 counter++;
                 System.out.println("Iteratie: " + counter);
+                System.out.println("Tijdsduur (ms): " + (System.nanoTime() - startCycle) / 1000000);
 
             } while (optimalTours < nTeams);
             columnGenEnd = System.nanoTime();
@@ -233,7 +226,7 @@ public class Main {
 
             int status = master.getModel().get(GRB.IntAttr.Status);
 
-            if(status == GRB.Status.OPTIMAL) {
+            if (status == GRB.Status.OPTIMAL) {
                 System.out.println("Optimal solution found");
                 IPsolution = master.getModel().get(GRB.DoubleAttr.ObjVal);
                 System.out.println("Total cost: " + IPsolution);
@@ -245,18 +238,16 @@ public class Main {
                     for (Map.Entry<Tour, GRBVar> tourEntry : entry.getValue().entrySet()) {
                         double val = tourEntry.getValue().get(GRB.DoubleAttr.X);
                         if (val > 0.5) {
-                            System.out.println("Team " + team + ": " + tourEntry.getKey());
+                            System.out.println("Team " + team + ": " + tourEntry.getKey() + " " + val);
                             break; // er is maar 1 tour geselecteerd per team
                         }
                     }
 
                 }
 
-            }
-            else{
+            } else {
                 System.out.println("No optimal solution found");
             }
-
 
         } catch (GRBException e) {
             e.printStackTrace();
@@ -332,75 +323,76 @@ public class Main {
         } catch (IOException e) {
             System.err.println("Error writing to JSONL file: " + e.getMessage());
         }
+        System.out.println("Tijdsduur (ms): " + (System.nanoTime() - start) / 1000000);
+
     }
 
-
-
-//
-//    public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
-//        List<Arc> arcs = original.getArcs();
-//        int n = arcs.size();
-//
-//        // Zoek tweede home game (arc.to == team)
-//        int homeCount = 0;
-//        int splitIndex = -1;
-//        for (int i = 0; i < n; i++) {
-//            if (arcs.get(i).to == team) {
-//                homeCount++;
-//                if (homeCount == 2) {
-//                    splitIndex = i;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        // Als we geen tweede home game vinden, geef originele tour terug
-//        if (splitIndex == -1)
-//            return original;
-//
-//        List<Arc> firstPart = arcs.subList(splitIndex, n);
-//        List<Arc> secondPart = arcs.subList(0, splitIndex);
-//
-//        List<Arc> newTourArcs = new ArrayList<>();
-//
-//        // Herbouw tour met geüpdatete tijdstippen
-//        int newTime = 0;
-//        for (Arc arc : firstPart) {
-//            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
-//        }
-//        for (Arc arc : secondPart) {
-//            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
-//        }
-//
-//        // Bereken nieuwe kost
-//        double cost = 0;
-//        for (Arc a : newTourArcs) {
-//            cost += distanceMatrix[a.from][a.to];
-//        }
-//
-//        return new Tour(newTourArcs, cost);
-//    }
-//
-//    public static boolean deepEquals(double[][][][] a, double[][][][] b) {
-//        if (a.length != b.length)
-//            return false;
-//        for (int i = 0; i < a.length; i++) {
-//            if (a[i].length != b[i].length)
-//                return false;
-//            for (int j = 0; j < a[i].length; j++) {
-//                if (a[i][j].length != b[i][j].length)
-//                    return false;
-//                for (int k = 0; k < a[i][j].length; k++) {
-//                    if (a[i][j][k].length != b[i][j][k].length)
-//                        return false;
-//                    for (int l = 0; l < a[i][j][k].length; l++) {
-//                        if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0)
-//                            return false;
-//                    }
-//                }
-//            }
-//        }
-//        return true;
-//    }
+    //
+    // public static Tour generateShiftedHomeGameTour(Tour original, int team,
+    // int[][] distanceMatrix) {
+    // List<Arc> arcs = original.getArcs();
+    // int n = arcs.size();
+    //
+    // // Zoek tweede home game (arc.to == team)
+    // int homeCount = 0;
+    // int splitIndex = -1;
+    // for (int i = 0; i < n; i++) {
+    // if (arcs.get(i).to == team) {
+    // homeCount++;
+    // if (homeCount == 2) {
+    // splitIndex = i;
+    // break;
+    // }
+    // }
+    // }
+    //
+    // // Als we geen tweede home game vinden, geef originele tour terug
+    // if (splitIndex == -1)
+    // return original;
+    //
+    // List<Arc> firstPart = arcs.subList(splitIndex, n);
+    // List<Arc> secondPart = arcs.subList(0, splitIndex);
+    //
+    // List<Arc> newTourArcs = new ArrayList<>();
+    //
+    // // Herbouw tour met geüpdatete tijdstippen
+    // int newTime = 0;
+    // for (Arc arc : firstPart) {
+    // newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
+    // }
+    // for (Arc arc : secondPart) {
+    // newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
+    // }
+    //
+    // // Bereken nieuwe kost
+    // double cost = 0;
+    // for (Arc a : newTourArcs) {
+    // cost += distanceMatrix[a.from][a.to];
+    // }
+    //
+    // return new Tour(newTourArcs, cost);
+    // }
+    //
+    // public static boolean deepEquals(double[][][][] a, double[][][][] b) {
+    // if (a.length != b.length)
+    // return false;
+    // for (int i = 0; i < a.length; i++) {
+    // if (a[i].length != b[i].length)
+    // return false;
+    // for (int j = 0; j < a[i].length; j++) {
+    // if (a[i][j].length != b[i][j].length)
+    // return false;
+    // for (int k = 0; k < a[i][j].length; k++) {
+    // if (a[i][j][k].length != b[i][j][k].length)
+    // return false;
+    // for (int l = 0; l < a[i][j][k].length; l++) {
+    // if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0)
+    // return false;
+    // }
+    // }
+    // }
+    // }
+    // return true;
+    // }
 
 }
