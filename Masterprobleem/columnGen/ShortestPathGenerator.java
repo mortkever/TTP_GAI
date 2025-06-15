@@ -8,7 +8,6 @@ import Masterprobleem.TourRepository;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Stack;
 
 import com.gurobi.gurobi.*;
@@ -26,7 +25,7 @@ public class ShortestPathGenerator {
     private ColumnGenerationHelper cgenHelper;
     private TourRepository existingTours;
     private int[] visited;
-    public PriorityQueue<Tour> tours;
+    public ArrayList<Tour> tours;
 
     private ShortestPathGenerator(int nTeams, int upperbound, int ts, int[][] costs, ColumnGenerationHelper cgh) {
         this.nTeams = nTeams;
@@ -84,35 +83,28 @@ public class ShortestPathGenerator {
         return true;
     }
 
-    public void generateTour(int team) {
-        long start = System.nanoTime();
-
+    public void generateAllTours(int team, double maxPercentage) {
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
         cgenHelper.resetCache(nTeams, timeSlots);
         bestCost = Double.MAX_VALUE;
         b = 0;
-        tours = new PriorityQueue<>();
-        DFSrec(team, 0, team, 0, 0, new Stack<>());
+        tours = new ArrayList<>();
+        DFSrecAll(team, 0, team, 0, 0, 0, new Stack<>());
 
-        // times[team] = (System.nanoTime() - start) / 1000;
-        // System.err.println("Best cost: " + bestCost + ", Time (µs): " + times[team]);
-        int tourCounter = 0;
-        ArrayList<Tour> toRemove = new ArrayList<>();
+        spg.tours.sort(null);
+        int maxNumber = (int) (spg.tours.size() * maxPercentage);
+        while (spg.tours.size() > maxNumber) {
+            spg.tours.removeFirst();
+        }
 
         Iterator<Tour> iterator = tours.iterator();
+        System.out.println(team + ": " + tours.size());
         while (iterator.hasNext()) {
             Tour tour = iterator.next();
 
-            Double realCost = 0.0;
-            for (Arc arc : tour.getArcs()) {
-                realCost += costs[arc.from][arc.to];
-            }
-
-            tour.setCost(realCost);
             existingTours.addTour(team, tour);
-            tourCounter++;
         }
     }
 
@@ -120,8 +112,7 @@ public class ShortestPathGenerator {
         existingTours.addTour(team, tour);
     }
 
-    private boolean DFSrec(int team, int s, int from, double cost, int layer, Stack<Arc> arcs) {
-        boolean tourFound = false;
+    private void DFSrecAll(int team, int s, int from, double modCost, double tourCost, int layer, Stack<Arc> arcs) {
         for (int i = 0; i < nTeams; i++) {
             if (s == timeSlots && i != team)
                 continue;
@@ -129,33 +120,35 @@ public class ShortestPathGenerator {
             if (resourceExtentionFunction(team, s, from, i)) {
                 visited[layer] = i;
                 arcs.add(new Arc(s, from, i));
+                tourCost += costs[from][i];
 
                 if (s == timeSlots && i == team) {
-                    if (cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
-                            - cgenHelper.getMu(team) < 0
-                            && isNotRedundantTour(team)) {
-                        bestCost = cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
-                                - cgenHelper.getMu(team);
+                    double totalModCost = modCost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams)
+                            - cgenHelper.getMu(team);
+                    if (totalModCost < 0
+                            && isNotRedundantAllTours(team, tourCost)) {
+                        bestCost = totalModCost;
                         ArrayList<Arc> tourArcs = new ArrayList<>(arcs);
-                        tours.add(new Tour(tourArcs, bestCost));
+                        tours.add(new Tour(tourArcs, tourCost, bestCost));
+
                         arcs.pop();
-                        return true;
+                        tourCost -= costs[from][i];
+                        return;
                     }
                 } else {
                     visits[i]++;
-                    if (DFSrec(team, s + 1, i,
-                            cost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), layer + 1,
-                            arcs)) {
-                        tourFound = true;
-                    }
+                    DFSrecAll(team, s + 1, i,
+                            modCost + cgenHelper.computeModifiedCost(team, from, i, s, this.costs, nTeams), tourCost,
+                            layer + 1,
+                            arcs);
                     visits[i]--;
                 }
 
                 arcs.pop();
+                tourCost -= costs[from][i];
             }
             b = b_prev;
         }
-        return tourFound;
     }
 
     private static boolean isArcA(int t, int s, int i, int j, int nTeams) {
@@ -171,18 +164,23 @@ public class ShortestPathGenerator {
         return (one || two) && isArcA(t, s, i, j, nTeams);
     }
 
-    private boolean isNotRedundantTour(int team) {
+    private boolean isNotRedundantAllTours(int team, double tourCost) {
         // Alle tours overlopen
         List<Tour> tours = existingTours.getTours(team);
         for (Tour tour : tours) {
             // Als er een arc verschilt met de gegenereerde tour: abort check, check
             // volgende tour
             boolean isDuplicate = true;
-            for (Arc arc : tour.getArcs()) {
-                if (visited[arc.time] != arc.to) {
-                    isDuplicate = false;
-                    break;
+            if (tour.getRealCost() == tourCost) // Als de kost verschilt kunnen de arcs niet overeenkomen.
+            {
+                for (Arc arc : tour.getArcs()) {
+                    if (visited[arc.time] != arc.to) {
+                        isDuplicate = false;
+                        break;
+                    }
                 }
+            } else {
+                isDuplicate = false;
             }
             // Als alle arcs overeen komen: zelfde tour => return false;
             if (isDuplicate) {
