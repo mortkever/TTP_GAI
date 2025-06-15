@@ -107,12 +107,16 @@ public class Main {
             relaxedModel_helper.setRandCost(false);
 
             do {
-                master.buildConstraints();
 
+                //
+                ////////
+                master.buildConstraints();
                 // Relax to LP for dual prices
                 GRBModel relaxed = master.getModel().relax();
                 relaxed.optimize();
                 master.setRelaxedModel(relaxed);
+                ////////
+
 
                 // Check variable values with tolerance
                 for (GRBVar var : relaxed.getVars()) {
@@ -134,7 +138,7 @@ public class Main {
 
                 exisingTours = 0;
                 optimalTours = 0;
-                int maxNumber = 500;
+                int maxNumber = 1500;
                 for (int t = 0; t < nTeams; t++) {
                     spg.generateTour(t);
                     if (spg.tours.size() > 0) {
