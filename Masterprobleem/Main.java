@@ -34,8 +34,8 @@ public class Main {
         boolean append = true; // false = overwrite, true = append
         List<Map<String, Object>> results = new ArrayList<>();
 
-        int strategieInitiele = 0;
-        int maxNumber = 5000;
+        int strategieInitiele = 3;
+        int maxNumber = 500;
         double LPsolution = 0.0;
         double IPsolution = 0.0;
         int aantalIteraties = 0;
@@ -101,7 +101,7 @@ public class Main {
         // 3. Add super columns
         // 4. Add multiple super columns
         // 5. Add 1 solution of compact formulation and 1 solution of the super columns
-        strategieInitiele = 4;
+        //strategieInitiele = 3;
 
         Masterproblem master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         ColumnGenerationHelper relaxedModel_helper = new ColumnGenerationHelper();
@@ -132,8 +132,8 @@ public class Main {
             boolean isfrac = false;
             relaxedModel_helper.setRandCost(false);
 
+            columnGenStart = System.nanoTime();
             do {
-                columnGenStart = System.nanoTime();
                 master.buildConstraints();
 
                 // Relax to LP for dual prices
@@ -181,6 +181,7 @@ public class Main {
 
             } while (optimalTours < nTeams);
             columnGenEnd = System.nanoTime();
+            System.out.println("\n\n\nColumn generation timing: " + formatDuration(columnGenEnd - columnGenStart));
             aantalIteraties = counter;
             for (HashMap<Tour, GRBVar> innerMap : master.getLambdaVars().values()) {
                 aantalKolommen += innerMap.size();
@@ -268,11 +269,11 @@ public class Main {
         String elapsedIpSolution = formatDuration(ipSolutionEnd - ipSolutionStart);
         String elapsedFull = formatDuration(fullEnd - fullStart);
 
-        //System.out.println("\n\nTijden statistieken:");
-        //System.out.println("Initiele oplossing: " + elapsedInitial);
-        //System.out.println("Column gen: " + elapsedColumnGen);
-        //System.out.println("Ip oplossing: " + elapsedIpSolution);
-        //System.out.println("Full program: " + elapsedFull);
+        System.out.println("\n\nTijden statistieken:");
+        System.out.println("Initiele oplossing:\t" + elapsedInitial);
+        System.out.println("Column gen:\t\t\t" + elapsedColumnGen);
+        System.out.println("Ip oplossing:\t\t" + elapsedIpSolution);
+        System.out.println("Full program:\t\t" + elapsedFull);
 
         Map<String, Object> runData = new LinkedHashMap<>();
         runData.put("input", inputLabel);
@@ -288,7 +289,7 @@ public class Main {
         results.add(runData);
 
         // Save results to JSONL file
-        String jsonlFileName = "output_files/Master_problem/" + inputLabel + "-" + maxNumber + "kol-info.jsonl";
+        String jsonlFileName = "output_files/Master_problem/updated/" + inputLabel + "-" + maxNumber + "kol-info.jsonl";
         writeResultsToJsonl(jsonlFileName, results, append);
         System.out.println("Benchmarking complete. Results written to " + jsonlFileName);
     }
@@ -333,74 +334,5 @@ public class Main {
             System.err.println("Error writing to JSONL file: " + e.getMessage());
         }
     }
-
-
-
-//
-//    public static Tour generateShiftedHomeGameTour(Tour original, int team, int[][] distanceMatrix) {
-//        List<Arc> arcs = original.getArcs();
-//        int n = arcs.size();
-//
-//        // Zoek tweede home game (arc.to == team)
-//        int homeCount = 0;
-//        int splitIndex = -1;
-//        for (int i = 0; i < n; i++) {
-//            if (arcs.get(i).to == team) {
-//                homeCount++;
-//                if (homeCount == 2) {
-//                    splitIndex = i;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        // Als we geen tweede home game vinden, geef originele tour terug
-//        if (splitIndex == -1)
-//            return original;
-//
-//        List<Arc> firstPart = arcs.subList(splitIndex, n);
-//        List<Arc> secondPart = arcs.subList(0, splitIndex);
-//
-//        List<Arc> newTourArcs = new ArrayList<>();
-//
-//        // Herbouw tour met geüpdatete tijdstippen
-//        int newTime = 0;
-//        for (Arc arc : firstPart) {
-//            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
-//        }
-//        for (Arc arc : secondPart) {
-//            newTourArcs.add(new Arc(newTime++, arc.from, arc.to));
-//        }
-//
-//        // Bereken nieuwe kost
-//        double cost = 0;
-//        for (Arc a : newTourArcs) {
-//            cost += distanceMatrix[a.from][a.to];
-//        }
-//
-//        return new Tour(newTourArcs, cost);
-//    }
-//
-//    public static boolean deepEquals(double[][][][] a, double[][][][] b) {
-//        if (a.length != b.length)
-//            return false;
-//        for (int i = 0; i < a.length; i++) {
-//            if (a[i].length != b[i].length)
-//                return false;
-//            for (int j = 0; j < a[i].length; j++) {
-//                if (a[i][j].length != b[i][j].length)
-//                    return false;
-//                for (int k = 0; k < a[i][j].length; k++) {
-//                    if (a[i][j][k].length != b[i][j][k].length)
-//                        return false;
-//                    for (int l = 0; l < a[i][j][k].length; l++) {
-//                        if (Double.compare(a[i][j][k][l], b[i][j][k][l]) != 0)
-//                            return false;
-//                    }
-//                }
-//            }
-//        }
-//        return true;
-//    }
 
 }

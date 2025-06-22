@@ -100,9 +100,9 @@ public class ColumnGenerationHelper {
             int s, // time slot index
             int[][] distanceMatrix,
             int numTeams) {
-        if (modCostCache[t][s][i][j] != Double.MAX_VALUE) {
-            return modCostCache[t][s][i][j];
-        }
+        //if (modCostCache[t][s][i][j] != Double.MAX_VALUE) {
+        //    return modCostCache[t][s][i][j];
+        //}
 
         // It will be calculated as c = X - Y - Z for readability
         // System.out.println("\nModified costs:");
@@ -156,11 +156,11 @@ public class ColumnGenerationHelper {
         // System.out.println("After: " + cost);
 
         // Obtain a number between [0 - 49].
-        if (randCost) {
-            Random rand = new Random();
-            cost = rand.nextInt(1500);
-        }
-        modCostCache[t][s][i][j] = cost;
+        // if (randCost) {
+        //     Random rand = new Random();
+        //     cost = rand.nextInt(1500);
+        // }
+        //modCostCache[t][s][i][j] = cost;
 
         return cost;
 
