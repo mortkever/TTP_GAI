@@ -87,7 +87,6 @@ public class ShortestPathGenerator {
         for (int k = 0; k < nTeams; k++) {
             visits[k] = 0;
         }
-        cgenHelper.resetCache(nTeams, timeSlots);
         bestCost = Double.MAX_VALUE;
         b = 0;
         tours = new ArrayList<>();
@@ -197,7 +196,6 @@ public class ShortestPathGenerator {
         env.set(GRB.IntParam.OutputFlag, 0);
         GRBModel model = new GRBModel(env);
         GRBVar x[][][] = new GRBVar[timeSlots + 1][nTeams][nTeams];
-        cgenHelper.resetCache(nTeams, timeSlots);
 
         for (int s = 0; s < timeSlots + 1; s++) {
             for (int i = 0; i < nTeams; i++) {

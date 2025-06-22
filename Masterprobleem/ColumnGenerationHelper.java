@@ -14,8 +14,6 @@ public class ColumnGenerationHelper {
 
     // Stores dual prices
     private Map<String, Double> dualPrices;
-    private double[][][][] modCostCache;
-    private boolean randCost = true;
 
     public ColumnGenerationHelper() throws GRBException {
         this.dualPrices = new HashMap<>();
@@ -76,19 +74,6 @@ public class ColumnGenerationHelper {
         return dualPrices;
     }
 
-    public void resetCache(int nTeams, int timeSlots) {
-        modCostCache = new double[nTeams][timeSlots + 1][nTeams][nTeams];
-        for (int t = 0; t < nTeams; t++) {
-            for (int s = 0; s < timeSlots + 1; s++) {
-                for (int i = 0; i < nTeams; i++) {
-                    for (int j = 0; j < nTeams; j++) {
-                        modCostCache[t][s][i][j] = Double.MAX_VALUE;
-                    }
-                }
-            }
-        }
-    }
-
     public double getMu(int team){
         return dualPrices.get("convexity_" + team);
     }
@@ -100,9 +85,6 @@ public class ColumnGenerationHelper {
             int s, // time slot index
             int[][] distanceMatrix,
             int numTeams) {
-        if (modCostCache[t][s][i][j] != Double.MAX_VALUE) {
-            return modCostCache[t][s][i][j];
-        }
 
         // It will be calculated as c = X - Y - Z for readability
         // System.out.println("\nModified costs:");
@@ -154,14 +136,6 @@ public class ColumnGenerationHelper {
 
         // System.out.println("Modified cost: " + cost);
         // System.out.println("After: " + cost);
-
-        // Obtain a number between [0 - 49].
-        if (randCost) {
-            Random rand = new Random();
-            cost = rand.nextInt(1500);
-        }
-        modCostCache[t][s][i][j] = cost;
-
         return cost;
 
         // Some extra information:
@@ -169,10 +143,6 @@ public class ColumnGenerationHelper {
         // - Coupling constraints: "matchOnce_i_j_s"
         // - Convexity constraints: "oneTourPerTeam_t"
         // - NRC constraints: "nrc_i_j_s"
-    }
-
-    public void setRandCost(boolean useRandCost) {
-        randCost = useRandCost;
     }
 
     public static List<Tour> generateOneFeasibleSuperColumn(int nTeams, int[][] distanceMatrix) {

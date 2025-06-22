@@ -129,7 +129,6 @@ public class Main {
             int counter = 0;
             int exisingTours = 0;
             int optimalTours = 0;
-            relaxedModel_helper.setRandCost(false);
 
             columnGenStart = System.nanoTime();
             do {
