@@ -488,7 +488,7 @@ public class ColumnGenerationHelper {
                 }
 
                 Tour tour = new Tour(arcs, totalCost);
-                System.out.println("Team " + t + ": " + tour);
+                //System.out.println("Team " + t + ": " + tour);
                 master.addTour(t, tour);
                 spg.addTour(t, tour);
                 totalCostPrint += totalCost;

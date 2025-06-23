@@ -1,7 +1,5 @@
 package Masterprobleem;
 
-import Things.Schedule;
-import Utils.ScheduleValidator;
 import com.gurobi.gurobi.*;
 
 import Masterprobleem.columnGen.ShortestPathGenerator;
@@ -36,7 +34,7 @@ public class Main {
 
         int strategieInitiele = 0;
         //int maxNumber = 5000;
-        double maxNumber = 0.5;
+        double maxNumber = 0.1;
         double LPsolution = 0.0;
         double IPsolution = 0.0;
         int aantalIteraties = 0;
@@ -280,11 +278,10 @@ public class Main {
         results.add(runData);
 
         // Save results to JSONL file
-        String jsonlFileName = "output_files/Master_problem/updated_column/" + inputLabel + "-" + (maxNumber*100) + "procent-info_updated.jsonl";
+        String jsonlFileName = "output_files/Master_problem/latest_runs/" + inputLabel + "-" + (maxNumber*100) + "procent.jsonl";
         writeResultsToJsonl(jsonlFileName, results, append);
         System.out.println("Benchmarking complete. Results written to " + jsonlFileName);
     }
-
 
     // Help functions for formatting and extracting durations
     // Convert nanoseconds to human-readable string

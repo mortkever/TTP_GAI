@@ -94,7 +94,8 @@ public class ShortestPathGenerator {
 
         spg.tours.sort(null);
         int maxNumber = (int) (spg.tours.size() * maxPercentage);
-        maxNumber = (maxNumber > 0 ? maxNumber : 1);
+        maxNumber = (maxNumber > 0 ? maxNumber : 1);    // At least use 1 tour
+
         while (spg.tours.size() > maxNumber) {
             spg.tours.removeFirst();
         }
