@@ -24,6 +24,7 @@ public class Masterproblem {
         env = new GRBEnv(true);
         env.set("logFile", "master.log");
         env.set(GRB.IntParam.LogToConsole, 0);
+        env.set(GRB.IntParam.Method, 4);
         env.start();
     }
 
