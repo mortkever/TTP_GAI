@@ -60,7 +60,7 @@ def process_jsonl_file(filepath):
     print("=" * 60 + "\n")
 
 def main():
-    folder_path = ""
+    folder_path = "latest_runs"
     jsonl_files = glob(os.path.join(folder_path, "*.jsonl"))
 
     if not jsonl_files:
