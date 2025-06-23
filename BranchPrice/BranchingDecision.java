@@ -24,5 +24,15 @@ public class BranchingDecision {
         return new Arc(slot, from, to);
     }
 
+    @Override
+    public String toString() {
+        return "BranchingDecision{" +
+                "team=" + team +
+                ", from=" + from +
+                ", to=" + to +
+                ", slot=" + slot +
+                ", mustUseArc=" + mustUseArc +
+                '}';
+    }
 }
 

@@ -14,22 +14,24 @@ public class BranchAndPrice {
     private ShortestPathGenerator spg;
     private int nTeams, timeSlots;
     private int[][] distanceMatrix;
-    private double lowerBound;
+    private double lowerBound = Double.MAX_VALUE;
     private int lpStatus;
     private GRBModel bestSolution;
-    private double incumbent = 32132131231231232132.312312321;
+    private double incumbent = Double.MAX_VALUE;
     private Set<String> previousBranchDecisions = new HashSet<>();
     private Queue<List<BranchingDecision>> queue = new LinkedList<>();
 
 
     //List<BranchingDecision> fixations
-    public BranchAndPrice(int nTeams, int[][] distanceMatrix, List<BranchingDecision> fixations) throws GRBException {
+    public BranchAndPrice(int nTeams, int[][] distanceMatrix, List<BranchingDecision> fixations, double incumbent, GRBModel bestSolution, Set<String> globalBranchMemory) throws GRBException {
         this.nTeams = nTeams;
         this.distanceMatrix = distanceMatrix;
         this.timeSlots = 2 * (nTeams - 1);
         this.fixations = fixations;
-
+        this.incumbent = incumbent;
+        this.bestSolution = bestSolution;
         this.helper = new ColumnGenerationHelper();
+        this.previousBranchDecisions = globalBranchMemory;
         this.master = new Masterproblem(new TourRepository(nTeams), distanceMatrix);
         this.spg = ShortestPathGenerator.initializeSPG(nTeams, 3, timeSlots, distanceMatrix, helper);
 
@@ -52,7 +54,9 @@ public class BranchAndPrice {
 
 
         GRBModel relaxed;
-        master.filterToursWithFixations(fixations);
+        if (master.getLambdaVars() != null && !master.getLambdaVars().isEmpty()) {
+            master.filterToursWithFixations(fixations);
+        }
 
         do {
 
@@ -80,18 +84,25 @@ public class BranchAndPrice {
             exisingTours = 0;
             optimalTours = 0;
             int maxNumber = 500;
+
             for (int t = 0; t < nTeams; t++) {
-                spg.generateTour(t);
-                if (spg.tours.size() > 0) {
-                    while (spg.tours.size() > maxNumber)
-                        spg.tours.poll();
-                    for (Tour tour : spg.tours) {
-                        if (tourIsCompatibleWithFixations(tour, t)) {
-                            exisingTours += master.addTour(t, tour);
-                        }
-                    }
-                } else {
+                final int teamIndex = t;  // Maak een final kopie voor gebruik in de lambda
+                spg.generateTour(teamIndex);
+
+                if (spg.tours.isEmpty()) {
                     optimalTours++;
+                    continue;
+                }
+
+                while (spg.tours.size() > maxNumber)
+                    spg.tours.poll();
+
+                List<Tour> compatibleTours = spg.tours.stream()
+                        .filter(tour -> tourIsCompatibleWithFixations(tour, teamIndex))
+                        .toList();
+
+                for (Tour tour : compatibleTours) {
+                    exisingTours += master.addTour(teamIndex, tour);
                 }
             }
 
@@ -176,7 +187,13 @@ public class BranchAndPrice {
 
 
             double lpValue = relaxed.get(GRB.DoubleAttr.ObjVal); // Lower Bound
-            double ipValue = master.getModel().get(GRB.DoubleAttr.ObjVal); // Integer oplossing
+            double ipValue;
+            if (status != GRB.Status.OPTIMAL) {
+                System.out.println("❌ IP model kon niet optimaal opgelost worden → tak prunen");
+                return 3;
+            }
+
+            ipValue = master.getModel().get(GRB.DoubleAttr.ObjVal); // Integer oplossing
 
             if (isIntegerSolution()) {
                 if (ipValue < incumbent) {
@@ -202,7 +219,7 @@ public class BranchAndPrice {
 
             if (arc == null) {
                 System.out.println("⚠️ Geen geschikte branching arc gevonden.");
-                return counter;
+                return 5;
             }
 
 
@@ -235,6 +252,15 @@ public class BranchAndPrice {
                                 if (previousBranchDecisions.contains(key)) {
                                     continue; // deze beslissing is al eens geprobeerd
                                 }
+
+                                boolean alreadyFixed = fixations.stream().anyMatch(fix ->
+                                        fix.team == team &&
+                                                fix.from == arc.from &&
+                                                fix.to == arc.to &&
+                                                fix.slot == arc.time
+                                );
+
+                                if (alreadyFixed) continue;
 
                                 // Nieuw voorstel: onthoud hem
                                 bestFractionality = frac;
@@ -281,8 +307,15 @@ public class BranchAndPrice {
 
             boolean contains = tour.containsArc(fix.from, fix.to, fix.slot);
 
-            if (fix.mustUseArc && !contains) return false;
-            if (!fix.mustUseArc && contains) return false;
+            if (fix.mustUseArc && !contains) {
+                //System.out.println("❌ Tour geweigerd: moet arc bevatten maar mist " + fix);
+                return false;
+            }
+            if (!fix.mustUseArc && contains) {
+                //System.out.println("❌ Tour geweigerd: mag arc niet bevatten maar bevat " + fix);
+                return false;
+            }
+
         }
         return true;
 
@@ -308,7 +341,7 @@ public class BranchAndPrice {
         }
         return true;
     }
-    
+
 
     public double getIncumbent() {
         return incumbent;
